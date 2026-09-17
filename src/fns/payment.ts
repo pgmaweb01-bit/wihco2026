@@ -166,13 +166,17 @@ export const processWebhookFn = createServerFn({
 
         const attendee = await prisma.attendee.findUnique({
           where: { id: attendeeId },
+          include: { category: true, ticket: true },
         });
 
         if (attendee) {
+          const ticketUrl = `${process.env.APP_URL}/ticket/${attendee.ticket?.qrToken}`;
           await sendConfirmationEmail({
             to: attendee.email,
-            name: `${attendee.firstName} ${attendee.lastName}`,
+            attendeeName: `${attendee.firstName} ${attendee.lastName}`,
             attendeeId: uniqueAttendeeId,
+            category: attendee.category.name,
+            ticketUrl,
           });
         }
       }

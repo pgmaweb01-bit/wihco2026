@@ -2,6 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { prisma } from "@/server/lib/prisma";
 import { initializePaystackTransaction } from "@/server/lib/paystack";
+import { generateAttendeeId } from "@/server/services/attendee-id";
+import { createTicket } from "@/server/services/ticket";
+import { sendConfirmationEmail } from "@/server/lib/email";
 import { randomBytes } from "crypto";
 
 const registrationSchema = z.object({
@@ -90,6 +93,26 @@ export const createRegistrationFn = createServerFn({
       });
 
       authorizationUrl = paystackResponse.data.authorization_url;
+    } else {
+      // Free registration — issue ticket and send email immediately
+      await prisma.attendee.update({
+        where: { id: attendee.id },
+        data: { paymentStatus: "PAID" },
+      });
+
+      const uniqueAttendeeId = await generateAttendeeId(attendee.id);
+      await createTicket({ attendeeId: attendee.id, attendeeUniqueId: uniqueAttendeeId });
+
+      const ticket = await prisma.ticket.findUnique({ where: { attendeeId: attendee.id } });
+      const ticketUrl = `${process.env.APP_URL}/ticket/${ticket?.qrToken}`;
+
+      await sendConfirmationEmail({
+        to: attendee.email,
+        attendeeName: `${attendee.firstName} ${attendee.lastName}`,
+        attendeeId: uniqueAttendeeId,
+        category: category.name,
+        ticketUrl,
+      });
     }
 
     return {
