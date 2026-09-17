@@ -84,7 +84,7 @@ function AdminCategories() {
             className="rounded-lg border border-input bg-background px-4 py-2.5 font-body text-sm outline-none focus:border-accent"
           />
           <input
-            placeholder="Price (leave empty for TBC)"
+            placeholder="Price in Naira (0 for free)"
             type="number"
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
@@ -125,7 +125,7 @@ function AdminCategories() {
               <p className="font-body text-sm font-bold">{cat.name}</p>
               <p className="font-body text-xs text-muted-foreground">{cat.description}</p>
               <p className="mt-1 font-body text-xs text-muted-foreground">
-                {cat.price !== null ? `${cat.currency} ${cat.price.toLocaleString()}` : "Price TBC"} · {cat.active ? "Active" : "Inactive"} · {cat._count?.attendees ?? 0} registered
+                {cat.price !== null && cat.price !== undefined ? cat.price === 0 ? "Free" : `₦${cat.price.toLocaleString()}` : "Price TBC"} · {cat.active ? "Active" : "Inactive"} · {cat._count?.attendees ?? 0} registered
               </p>
             </div>
             <button

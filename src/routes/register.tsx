@@ -247,7 +247,7 @@ function RegisterPage() {
                     </span>
                   </span>
                   <span className="font-body text-sm font-bold whitespace-nowrap text-foreground">
-                    {c.price === null ? "Price TBC" : `${c.currency} ${c.price.toLocaleString()}`}
+                    {c.price === null || c.price === undefined ? "Price TBC" : c.price === 0 ? "Free" : `₦${c.price.toLocaleString()}`}
                   </span>
                 </label>
               ))}
@@ -262,9 +262,11 @@ function RegisterPage() {
               </span>
               <span className="font-display text-3xl font-extrabold tracking-tight">
                 {selected
-                  ? selected.price === null
+                  ? selected.price === null || selected.price === undefined
                     ? "TBC"
-                    : `${selected.currency} ${selected.price.toLocaleString()}`
+                    : selected.price === 0
+                      ? "Free"
+                      : `₦${selected.price.toLocaleString()}`
                   : "—"}
               </span>
             </div>
