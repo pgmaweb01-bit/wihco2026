@@ -38,6 +38,7 @@ function CheckInPage() {
   const [manualToken, setManualToken] = useState("");
   const [currentToken, setCurrentToken] = useState("");
   const [scannerActive, setScannerActive] = useState(false);
+  const [scannerStarting, setScannerStarting] = useState(false);
   const scannerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,15 +54,19 @@ function CheckInPage() {
   }, []);
 
   const startScanner = useCallback(async () => {
-    if (scannerActive) return;
+    if (scannerActive || scannerStarting) return;
+    setScannerStarting(true);
     try {
       const { Html5Qrcode } = await import("html5-qrcode");
 
-      await new Promise((r) => setTimeout(r, 100));
+      await new Promise((r) => setTimeout(r, 200));
 
       const scannerId = "qr-reader";
       const container = document.getElementById(scannerId);
-      if (!container) return;
+      if (!container) {
+        setScannerStarting(false);
+        return;
+      }
 
       const scanner = new Html5Qrcode(scannerId);
       scannerRef.current = scanner;
@@ -80,11 +85,13 @@ function CheckInPage() {
         () => {},
       );
       setScannerActive(true);
+      setScannerStarting(false);
     } catch (err) {
       console.error("Scanner start failed:", err);
       setScannerActive(false);
+      setScannerStarting(false);
     }
-  }, [scannerActive, stopScanner]);
+  }, [scannerActive, scannerStarting, stopScanner]);
 
   useEffect(() => {
     return () => {
@@ -325,9 +332,9 @@ function CheckInPage() {
                 id="qr-reader"
                 ref={containerRef}
                 className="mx-auto overflow-hidden rounded-xl border-2 border-[#082266]/20"
-                style={{ maxWidth: "350px", display: scannerActive ? "block" : "none" }}
+                style={{ maxWidth: "350px", display: (scannerActive || scannerStarting) ? "block" : "none" }}
               />
-              {!scannerActive && (
+              {!scannerActive && !scannerStarting && (
                 <div className="mx-auto mb-4 grid size-28 place-items-center rounded-full border-4 border-dashed border-[#082266]/30 bg-[#082266]/5">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-14 text-[#082266]">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5Z" />
@@ -337,20 +344,30 @@ function CheckInPage() {
               )}
 
               <h2 className="font-display text-2xl font-extrabold text-[#082266]">
-                {scannerActive ? "Scanning..." : "Scan QR Code"}
+                {scannerActive ? "Scanning..." : scannerStarting ? "Starting camera..." : "Scan QR Code"}
               </h2>
               <p className="mt-2 font-body text-sm text-muted-foreground">
-                {scannerActive ? "Hold the QR code in front of the camera" : "Start the camera or enter token manually"}
+                {scannerActive ? "Hold the QR code in front of the camera" : scannerStarting ? "Please allow camera access" : "Start the camera or enter token manually"}
               </p>
             </div>
 
             <div className="mb-6 flex flex-col gap-3">
-              {!scannerActive ? (
+              {!scannerActive && !scannerStarting ? (
                 <button
                   onClick={startScanner}
                   className="w-full rounded-lg bg-[#082266] px-6 py-4 font-body text-base font-bold text-white transition-all hover:bg-[#082266]/90 active:scale-[0.98]"
                 >
                   Start Camera Scanner
+                </button>
+              ) : scannerStarting && !scannerActive ? (
+                <button
+                  disabled
+                  className="w-full rounded-lg bg-[#082266]/60 px-6 py-4 font-body text-base font-bold text-white/80"
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Starting camera...
+                  </span>
                 </button>
               ) : (
                 <button
