@@ -7,22 +7,19 @@ export function SiteNav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-background/75 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-border bg-primary/95 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
         <a href="#home" className="flex items-center gap-3">
           <img
             src="/Logo.png"
             alt="WIHCN"
-            className="h-8 w-auto"
+            className="h-12 w-auto"
           />
-          <span className="font-display text-sm font-bold tracking-tight text-primary">
-            WIHCN CON <span className="text-muted-foreground">III</span>
-          </span>
         </a>
 
-        <div className="hidden items-center gap-8 font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground lg:flex">
+        <div className="hidden items-center gap-8 font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80 lg:flex">
           {NAV_LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="transition-colors hover:text-foreground">
+            <a key={l.href} href={l.href} className="transition-colors hover:text-white">
               {l.label}
             </a>
           ))}
@@ -39,7 +36,7 @@ export function SiteNav() {
             type="button"
             aria-label={open ? "Close menu" : "Open menu"}
             onClick={() => setOpen((v) => !v)}
-            className="grid size-10 place-items-center rounded-lg border border-border text-foreground lg:hidden"
+            className="grid size-10 place-items-center rounded-lg border border-white/30 text-white lg:hidden"
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
@@ -47,14 +44,14 @@ export function SiteNav() {
       </div>
 
       {open && (
-        <div className="border-t border-border bg-background/95 px-6 py-4 lg:hidden">
+        <div className="border-t border-white/20 bg-primary px-6 py-4 lg:hidden">
           <div className="flex flex-col gap-1">
             {NAV_LINKS.map((l) => (
               <a
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-2 py-3 font-body text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="rounded-lg px-2 py-3 font-body text-xs font-semibold uppercase tracking-[0.18em] text-white/80 transition-colors hover:bg-white/10 hover:text-white"
               >
                 {l.label}
               </a>
