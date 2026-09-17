@@ -1,0 +1,218 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum TicketStatus {
+  PENDING
+  ISSUED
+  CANCELLED
+}
+
+enum CheckInStatus {
+  NOT_CHECKED_IN
+  CHECKED_IN
+}
+
+enum SpeakerRole {
+  KEYNOTE
+  SPEAKER
+  PANELIST
+}
+
+enum SessionType {
+  CONFERENCE
+  KEYNOTE
+  PANEL
+  WORKSHOP
+  NETWORKING
+  BREAK
+  AFTER_PARTY
+  OTHER
+}
+
+enum PaymentProvider {
+  PAYSTACK
+  MANUAL
+}
+
+enum PaymentRecordStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+// ─── Models ──────────────────────────────────────────────
+
+model RegistrationCategory {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  price       Float?
+  currency    String   @default("NGN")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  attendees Attendee[]
+
+  @@map("registration_categories")
+}
+
+model Attendee {
+  id               String         @id @default(cuid())
+  attendeeId       String?        @unique
+  firstName        String
+  lastName         String
+  email            String         @unique
+  phone            String
+  organisation     String
+  jobTitle         String
+  city             String
+  country          String
+  categoryId       String
+  category         RegistrationCategory @relation(fields: [categoryId], references: [id])
+  paymentStatus    PaymentStatus  @default(PENDING)
+  paymentReference String?        @unique
+  paymentAmount    Float?
+  paymentCurrency  String         @default("NGN")
+  paidAt           DateTime?
+  ticketReference  String?        @unique
+  ticketStatus     TicketStatus   @default(PENDING)
+  checkInStatus    CheckInStatus  @default(NOT_CHECKED_IN)
+  checkInTime      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  payment  Payment?
+  ticket   Ticket?
+  checkIn  CheckIn?
+
+  @@index([email])
+  @@index([attendeeId])
+  @@index([paymentReference])
+  @@index([ticketReference])
+  @@index([categoryId])
+  @@index([paymentStatus])
+  @@index([checkInStatus])
+  @@map("attendees")
+}
+
+model Payment {
+  id         String             @id @default(cuid())
+  attendeeId String             @unique
+  attendee   Attendee           @relation(fields: [attendeeId], references: [id], onDelete: Cascade)
+  provider   PaymentProvider    @default(PAYSTACK)
+  reference  String             @unique
+  amount     Float
+  currency   String             @default("NGN")
+  status     PaymentRecordStatus @default(PENDING)
+  paidAt     DateTime?
+  rawPayload String?            @db.Text
+  createdAt  DateTime           @default(now())
+
+  @@index([reference])
+  @@map("payments")
+}
+
+model Ticket {
+  id              String       @id @default(cuid())
+  attendeeId      String       @unique
+  attendee        Attendee     @relation(fields: [attendeeId], references: [id], onDelete: Cascade)
+  ticketReference String       @unique
+  qrToken         String       @unique
+  status          TicketStatus @default(PENDING)
+  issuedAt        DateTime?
+  createdAt       DateTime     @default(now())
+
+  @@index([qrToken])
+  @@index([ticketReference])
+  @@map("tickets")
+}
+
+model CheckIn {
+  id          String   @id @default(cuid())
+  attendeeId  String   @unique
+  attendee    Attendee @relation(fields: [attendeeId], references: [id], onDelete: Cascade)
+  checkedInAt DateTime @default(now())
+  checkedInBy String?
+  device      String?
+  createdAt   DateTime @default(now())
+
+  @@index([attendeeId])
+  @@map("check_ins")
+}
+
+model Speaker {
+  id           String       @id @default(cuid())
+  name         String
+  title        String       @default("")
+  organisation String       @default("")
+  biography    String       @default("") @db.Text
+  imageUrl     String?
+  role         SpeakerRole  @default(SPEAKER)
+  displayOrder Int          @default(0)
+  active       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([role])
+  @@index([displayOrder])
+  @@index([active])
+  @@map("speakers")
+}
+
+model ProgrammeSession {
+  id           String      @id @default(cuid())
+  title        String
+  description  String      @default("") @db.Text
+  startTime    String
+  endTime      String
+  sessionType  SessionType @default(OTHER)
+  displayOrder Int         @default(0)
+  active       Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([displayOrder])
+  @@index([active])
+  @@map("programme_sessions")
+}
+
+model Faq {
+  id           String   @id @default(cuid())
+  question     String
+  answer       String   @db.Text
+  displayOrder Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([displayOrder])
+  @@map("faqs")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admin_users")
+}

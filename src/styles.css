@@ -1,0 +1,176 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * WIHCN CON III Design System
+ * Brand: #082266 (navy), #23A455 (green), #024964 (teal)
+ * Font: Montserrat
+ */
+
+@theme {
+  --font-display: "Montserrat", sans-serif;
+  --font-body: "Montserrat", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --ease-frost: cubic-bezier(0.32, 0.72, 0, 1);
+  --animate-rise: rise 0.6s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: hsl(210 20% 98%);
+  --foreground: hsl(228 64% 13%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(228 64% 13%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(228 64% 13%);
+  --primary: hsl(228 64% 21%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(147 56% 96%);
+  --secondary-foreground: hsl(228 64% 13%);
+  --muted: hsl(210 16% 95%);
+  --muted-foreground: hsl(228 12% 45%);
+  --accent: hsl(147 56% 46%);
+  --accent-foreground: hsl(0 0% 100%);
+  --destructive: hsl(0 72% 51%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(220 14% 90%);
+  --input: hsl(220 14% 88%);
+  --ring: hsl(228 64% 21%);
+  --chart-1: hsl(228 64% 21%);
+  --chart-2: hsl(147 56% 46%);
+  --chart-3: hsl(200 70% 34%);
+  --chart-4: hsl(147 48% 59%);
+  --chart-5: hsl(228 48% 36%);
+  --sidebar: hsl(228 64% 21%);
+  --sidebar-foreground: hsl(0 0% 100%);
+  --sidebar-primary: hsl(147 56% 46%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(228 56% 28%);
+  --sidebar-accent-foreground: hsl(0 0% 100%);
+  --sidebar-border: hsl(228 48% 30%);
+  --sidebar-ring: hsl(147 56% 46%);
+}
+
+.dark {
+  --background: hsl(228 64% 8%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(228 56% 14%);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(228 56% 14%);
+  --popover-foreground: hsl(0 0% 98%);
+  --primary: hsl(147 56% 46%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(228 48% 20%);
+  --secondary-foreground: hsl(0 0% 98%);
+  --muted: hsl(228 48% 20%);
+  --muted-foreground: hsl(220 14% 65%);
+  --accent: hsl(147 56% 46%);
+  --accent-foreground: hsl(0 0% 100%);
+  --destructive: hsl(0 62% 50%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(228 40% 22%);
+  --input: hsl(228 40% 24%);
+  --ring: hsl(147 56% 46%);
+  --chart-1: hsl(147 56% 46%);
+  --chart-2: hsl(228 64% 36%);
+  --chart-3: hsl(200 70% 44%);
+  --chart-4: hsl(147 48% 59%);
+  --chart-5: hsl(228 56% 46%);
+  --sidebar: hsl(228 64% 12%);
+  --sidebar-foreground: hsl(0 0% 98%);
+  --sidebar-primary: hsl(147 56% 46%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(228 48% 18%);
+  --sidebar-accent-foreground: hsl(0 0% 98%);
+  --sidebar-border: hsl(228 40% 22%);
+  --sidebar-ring: hsl(147 56% 46%);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}
+
+/* Print styles for badges */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .badge-print,
+  .badge-print * {
+    visibility: visible;
+  }
+  .badge-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100mm;
+    height: 140mm;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
