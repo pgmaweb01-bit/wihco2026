@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { getAdminAttendeesFn } from "@/fns/admin-attendees";
 import { exportAttendeesFn } from "@/fns/admin-export";
+import { resendTicketEmailFn } from "@/fns/resend-email";
 
 export const Route = createFileRoute("/admin/attendees")({
   component: AdminAttendees,
@@ -40,6 +41,7 @@ function AdminAttendees() {
   const [filterPayment, setFilterPayment] = useState("");
   const [filterCheckIn, setFilterCheckIn] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const fetchAttendees = (page = 1, searchVal = search) => {
     setLoading(true);
@@ -100,13 +102,19 @@ function AdminAttendees() {
 
   const handleResend = async (attendeeId: string) => {
     setActionLoading(attendeeId);
+    setToast(null);
     try {
-      await fetch(`/api/admin/tickets/${attendeeId}/resend`, { method: "POST" });
-      alert("Ticket resent!");
+      const res: any = await resendTicketEmailFn({ data: { attendeeId } });
+      if (res?.success) {
+        setToast({ message: "Ticket email resent successfully!", type: "success" });
+      } else {
+        setToast({ message: res?.error || "Failed to resend.", type: "error" });
+      }
     } catch {
-      alert("Failed to resend ticket.");
+      setToast({ message: "Failed to resend ticket.", type: "error" });
     }
     setActionLoading(null);
+    setTimeout(() => setToast(null), 4000);
   };
 
   const handleExport = async () => {
@@ -237,14 +245,23 @@ function AdminAttendees() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    {a.paymentStatus === "PAID" && (
+                    {a.ticketReference ? (
                       <button
                         onClick={() => handleResend(a.id)}
                         disabled={actionLoading === a.id}
-                        className="rounded bg-secondary px-2 py-1 text-[10px] font-bold text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
+                        className="rounded bg-[#082266] px-3 py-1.5 text-[10px] font-bold text-white hover:bg-[#082266]/90 disabled:opacity-50"
                       >
-                        {actionLoading === a.id ? "..." : "Resend"}
+                        {actionLoading === a.id ? (
+                          <span className="flex items-center gap-1">
+                            <span className="size-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            Sending...
+                          </span>
+                        ) : (
+                          "Resend Email"
+                        )}
                       </button>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">No ticket</span>
                     )}
                   </td>
                 </tr>
@@ -274,6 +291,17 @@ function AdminAttendees() {
           >
             Next
           </button>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 rounded-xl px-5 py-3 font-body text-sm font-bold text-white shadow-lg transition-all ${
+            toast.type === "success" ? "bg-accent" : "bg-destructive"
+          }`}
+        >
+          {toast.message}
         </div>
       )}
     </div>
