@@ -79,6 +79,17 @@ function Home() {
     <div className="min-h-screen scroll-smooth bg-background font-body text-foreground">
       <SiteNav />
 
+      {/* TICKER */}
+      <div className="overflow-hidden border-b border-white/10 bg-primary py-3">
+        <div className="flex w-max animate-[marquee_20s_linear_infinite]">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <span key={i} className="whitespace-nowrap px-8 font-display text-sm font-bold uppercase tracking-[0.3em] text-white/40">
+              Women in Healthcare Network
+            </span>
+          ))}
+        </div>
+      </div>
+
       {/* HERO */}
       <header id="home" className="relative overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -90,10 +101,6 @@ function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/75 to-primary/60" />
         </div>
         <div className="relative mx-auto max-w-7xl px-6 pt-20 pb-24">
-          <div className="animate-rise inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.18em] text-white backdrop-blur-md">
-            <span className="size-1.5 rounded-full bg-accent" />
-            {EVENT.hashtag}
-          </div>
           <p className="animate-rise mt-8 flex items-baseline gap-3 font-body text-[0.2em] uppercase tracking-[0.2em] text-white/70 [animation-delay:40ms]">
             <span className="font-display text-[3.5rem] font-black leading-none text-accent">3RD</span>
             <span className="font-body text-sm font-bold leading-tight">Annual<br />Conference</span>
