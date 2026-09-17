@@ -394,6 +394,33 @@ function CheckInPage() {
                 <span className="font-body text-sm">Checking ticket...</span>
               </div>
             )}
+
+            {/* How it works guide */}
+            {state === "idle" && (
+              <div className="mt-8 rounded-xl border border-[#082266]/10 bg-[#082266]/5 p-5 text-left">
+                <p className="mb-3 font-body text-xs font-bold uppercase tracking-wider text-[#082266]">
+                  How It Works
+                </p>
+                <ol className="space-y-2 font-body text-sm text-muted-foreground">
+                  <li className="flex gap-2">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#082266] text-[10px] font-bold text-white">1</span>
+                    <span>Click <strong>"Start Camera Scanner"</strong> to open the device camera</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#082266] text-[10px] font-bold text-white">2</span>
+                    <span>Point the camera at the attendee's <strong>QR code</strong> from their confirmation email</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#082266] text-[10px] font-bold text-white">3</span>
+                    <span>Review the attendee info and click <strong>"Confirm Check-In"</strong></span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#23A455] text-[10px] font-bold text-white">4</span>
+                    <span>Click <strong>"Print Conference Badge"</strong> to print the badge via connected printer</span>
+                  </li>
+                </ol>
+              </div>
+            )}
           </div>
         )}
 

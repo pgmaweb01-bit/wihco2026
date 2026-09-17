@@ -40,12 +40,26 @@ function AdminCheckInsPage() {
   return (
     <div className="min-h-screen bg-primary p-6 font-body">
       <div className="mx-auto max-w-6xl">
-        <h1 className="font-display mb-2 text-3xl font-bold text-accent">
-          Check-In Logs
-        </h1>
-        <p className="mb-6 text-sm text-muted">
-          Admin view of all attendee check-ins
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="font-display mb-2 text-3xl font-bold text-accent">
+              Check-In Logs
+            </h1>
+            <p className="mb-6 text-sm text-muted">
+              Admin view of all attendee check-ins
+            </p>
+          </div>
+          <a
+            href="/check-in"
+            target="_blank"
+            className="inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-3 font-body text-sm font-bold text-white shadow-lg transition-all hover:bg-accent/90 hover:shadow-xl active:scale-[0.98]"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5Z" />
+            </svg>
+            Open QR Scanner
+          </a>
+        </div>
 
         {loading ? (
           <div className="flex h-64 items-center justify-center">

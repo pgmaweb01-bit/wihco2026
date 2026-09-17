@@ -11,11 +11,12 @@ export const Route = createFileRoute("/admin")({
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/admin" },
   { label: "Attendees", href: "/admin/attendees" },
+  { label: "QR Scanner", href: "/check-in", external: true },
+  { label: "Check-In Logs", href: "/admin/check-ins" },
   { label: "Categories", href: "/admin/categories" },
   { label: "Speakers", href: "/admin/speakers" },
   { label: "Programme", href: "/admin/programme" },
   { label: "FAQs", href: "/admin/faqs" },
-  { label: "Check-Ins", href: "/admin/check-ins" },
 ];
 
 function AdminLayout() {
@@ -41,17 +42,30 @@ function AdminLayout() {
         </div>
 
         <nav className="mt-4 space-y-1 px-3">
-          {NAV_ITEMS.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              activeProps={{ className: "bg-accent/10 text-accent font-bold" }}
-              className="block rounded-lg px-3 py-2.5 font-body text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              onClick={() => setSidebarOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {NAV_ITEMS.map((item) =>
+            item.external ? (
+              <a
+                key={item.href}
+                href={item.href}
+                target="_blank"
+                className="flex items-center gap-2 rounded-lg px-3 py-2.5 font-body text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                onClick={() => setSidebarOpen(false)}
+              >
+                {item.label}
+                <span className="text-[10px] text-accent">&#8599;</span>
+              </a>
+            ) : (
+              <Link
+                key={item.href}
+                to={item.href}
+                activeProps={{ className: "bg-accent/10 text-accent font-bold" }}
+                className="block rounded-lg px-3 py-2.5 font-body text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                onClick={() => setSidebarOpen(false)}
+              >
+                {item.label}
+              </Link>
+            )
+          )}
         </nav>
 
         <div className="absolute bottom-4 left-3 right-3 space-y-2">
