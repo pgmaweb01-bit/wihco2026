@@ -157,17 +157,14 @@ function RegisterPage() {
       <div className="pointer-events-none fixed -top-24 -right-20 size-[520px] rounded-full bg-accent/40 blur-3xl" />
       <div className="pointer-events-none fixed bottom-0 -left-24 size-[420px] rounded-full bg-primary/20 blur-3xl" />
 
-      <nav className="sticky top-0 z-50 border-b border-border bg-background/75 backdrop-blur-xl">
+      <nav className="sticky top-0 z-50 border-b border-border bg-primary/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/Logo.png" alt="WIHCN" className="h-8 w-auto" />
-            <span className="font-display text-sm font-bold tracking-tight text-primary">
-              WIHCN CON <span className="text-muted-foreground">III</span>
-            </span>
+            <img src="/Logo.png" alt="WIHCN" className="h-12 w-auto" />
           </Link>
           <Link
             to="/"
-            className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
+            className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80 transition-colors hover:text-white"
           >
             Back to site
           </Link>
