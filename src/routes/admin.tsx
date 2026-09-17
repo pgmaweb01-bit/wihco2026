@@ -14,7 +14,6 @@ const NAV_ITEMS = [
   { label: "QR Scanner", href: "/check-in", external: true },
   { label: "Check-In Logs", href: "/admin/check-ins" },
   { label: "Categories", href: "/admin/categories" },
-  { label: "Speakers", href: "/admin/speakers" },
   { label: "Programme", href: "/admin/programme" },
   { label: "FAQs", href: "/admin/faqs" },
 ];

@@ -3,10 +3,8 @@ import { useState, useEffect } from "react";
 import { SiteNav } from "@/components/site/site-nav";
 import { SiteFooter } from "@/components/site/site-footer";
 import { EVENT } from "@/data/conference";
-import { getSpeakersFn } from "@/fns/speakers";
 import { getProgrammeFn } from "@/fns/programme";
 import { getFaqsFn } from "@/fns/faqs";
-import keynotePortrait from "@/assets/keynote-portrait.jpg";
 import venueImage from "@/assets/venue-harbour.jpg";
 
 export const Route = createFileRoute("/")({
@@ -31,7 +29,6 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type Speaker = { id: string; name: string; title: string; organisation: string; biography: string; imageUrl: string | null; role: string };
 type ProgrammeSession = { id: string; title: string; description: string; startTime: string; endTime: string; sessionType: string };
 type Faq = { id: string; question: string; answer: string };
 
@@ -54,23 +51,22 @@ const THEME_IDEAS = [
   { n: "03", title: "Innovation", body: "Advancing care with ideas that outlast the trend." },
 ];
 
-const KEYNOTE_SPEAKER: Speaker = {
-  id: "keynote",
-  name: "Dr. Omobola Johnson",
-  title: "Senior Partner",
-  organisation: "TLcom Capital",
-  biography: "Biography to be confirmed by the conference team.",
-  imageUrl: null,
-  role: "KEYNOTE",
+const SESSION_TYPE_COLORS: Record<string, string> = {
+  CONFERENCE: "bg-primary/10 text-primary",
+  KEYNOTE: "bg-accent/10 text-accent",
+  PANEL: "bg-blue-500/10 text-blue-600",
+  WORKSHOP: "bg-amber-500/10 text-amber-600",
+  NETWORKING: "bg-green-500/10 text-green-600",
+  BREAK: "bg-muted text-muted-foreground",
+  AFTER_PARTY: "bg-purple-500/10 text-purple-600",
+  OTHER: "bg-muted text-muted-foreground",
 };
 
 function Home() {
-  const [speakers, setSpeakers] = useState<Speaker[]>([]);
   const [programme, setProgramme] = useState<ProgrammeSession[]>([]);
   const [faqs, setFaqs] = useState<Faq[]>([]);
 
   useEffect(() => {
-    getSpeakersFn().then(setSpeakers).catch(() => {});
     getProgrammeFn().then(setProgramme).catch(() => {});
     getFaqsFn().then(setFaqs).catch(() => {});
   }, []);
@@ -145,7 +141,7 @@ function Home() {
         <div className="flex items-end justify-between border-b border-border pb-5">
           <div>
             <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
-              (a) About
+              About
             </span>
             <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">A day for the people building care</h2>
           </div>
@@ -182,7 +178,7 @@ function Home() {
       <section id="theme" className="mx-auto max-w-7xl px-6 py-20">
         <div className="flex items-end justify-between border-b border-border pb-5">
           <div>
-            <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">(b) Theme</span>
+            <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Theme</span>
             <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{EVENT.theme}</h2>
           </div>
           <p className="hidden max-w-[30ch] text-right font-body text-sm text-muted-foreground sm:block">{EVENT.subtitle}</p>
@@ -198,68 +194,27 @@ function Home() {
         </div>
       </section>
 
-      {/* KEYNOTE */}
-      <section id="speakers" className="border-y border-border bg-background/50">
-        <div className="mx-auto grid max-w-7xl items-stretch gap-8 px-6 py-20 lg:grid-cols-2 lg:gap-12">
-          <div className="order-2 flex flex-col justify-center lg:order-1">
-            <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Keynote Speaker</span>
-            <h2 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">{KEYNOTE_SPEAKER.name}</h2>
-            <p className="mt-3 font-body text-base font-semibold text-accent">{KEYNOTE_SPEAKER.title}, {KEYNOTE_SPEAKER.organisation}</p>
-            <div className="mt-7 rounded-xl border border-border bg-background/70 p-5 backdrop-blur-md">
-              <span className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Biography</span>
-              <p className="mt-2 font-body text-sm text-pretty text-muted-foreground">{KEYNOTE_SPEAKER.biography}</p>
-            </div>
-          </div>
-          <div className="order-1 lg:order-2">
-            <img src={keynotePortrait} alt={`Portrait of ${KEYNOTE_SPEAKER.name}`} width={1024} height={1280} className="h-full max-h-[560px] w-full rounded-2xl object-cover" />
-          </div>
-        </div>
-      </section>
-
-      {/* SPEAKERS */}
-      <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="border-b border-border pb-5">
-          <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Speakers &amp; Panelists</span>
-          <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">The voices on stage</h2>
-        </div>
-        {speakers.length === 0 ? (
-          <p className="mt-8 max-w-[48ch] font-body text-sm text-muted-foreground">Speakers and panelists will be announced here as they are confirmed.</p>
-        ) : (
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {speakers.map((s) => (
-              <article key={s.id} className="overflow-hidden rounded-2xl border border-border bg-background/70 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10">
-                <div className="aspect-4/5 w-full bg-accent/15" />
-                <div className="p-6">
-                  <span className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-accent">{s.role}</span>
-                  <h3 className="mt-2 font-body text-lg font-semibold">{s.name}</h3>
-                  <p className="mt-1 font-body text-sm text-muted-foreground">{s.title}, {s.organisation}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
-
       {/* PROGRAMME */}
       <section id="programme" className="mx-auto max-w-7xl px-6 py-20">
         <div className="flex items-end justify-between border-b border-border pb-5">
-          <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">(c) Programme</span>
+          <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Programme</span>
           <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">The day, in order</h2>
         </div>
-        <ol className="mt-8">
-          {programme.map((s, i) => (
-            <li key={s.id} className={`grid grid-cols-[80px_1fr] gap-4 py-7 transition-colors hover:bg-background/60 sm:grid-cols-[150px_1fr] sm:gap-6 ${i < programme.length - 1 ? "border-b border-border" : ""}`}>
-              <div>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {programme.map((s) => (
+            <div key={s.id} className="rounded-2xl border border-border bg-background/70 p-5 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 sm:p-7">
+              <div className="flex items-center justify-between">
                 <span className="font-mono text-sm font-bold text-foreground">{s.startTime}</span>
-                <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{s.endTime}</span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">to {s.endTime}</span>
               </div>
-              <div>
-                <h3 className="font-body text-lg font-bold text-foreground uppercase">{s.title}</h3>
-                <p className="mt-1 font-body text-sm text-muted-foreground">{s.description}</p>
-              </div>
-            </li>
+              <span className={`mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${SESSION_TYPE_COLORS[s.sessionType] || SESSION_TYPE_COLORS.OTHER}`}>
+                {s.sessionType}
+              </span>
+              <h3 className="mt-3 font-body text-lg font-bold text-foreground uppercase">{s.title}</h3>
+              <p className="mt-1 font-body text-sm text-muted-foreground">{s.description}</p>
+            </div>
           ))}
-        </ol>
+        </div>
       </section>
 
       {/* GALLERY */}
@@ -288,7 +243,7 @@ function Home() {
       <section id="venue" className="mx-auto max-w-7xl px-6 pb-20">
         <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-center">
           <div>
-            <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">(d) Venue</span>
+            <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Venue</span>
             <h2 className="mt-4 font-display text-3xl font-extrabold tracking-tight sm:text-5xl">{EVENT.venue}, {EVENT.city}</h2>
             <p className="mt-4 max-w-[38ch] font-body text-sm text-pretty text-muted-foreground">A waterfront venue for the day's plenary and the evening after party. Full directions will be shared with registered attendees.</p>
             <a href="https://www.google.com/maps/search/?api=1&query=Harbour+Point+Lagos" target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-lg border border-border bg-background/60 px-5 py-3 font-body text-sm font-bold text-foreground backdrop-blur-md transition-all hover:border-accent/40 hover:text-accent">Get Directions</a>
@@ -300,7 +255,7 @@ function Home() {
       {/* FAQ */}
       <section id="faq" className="mx-auto max-w-7xl px-6 pb-20">
         <div className="flex items-end justify-between border-b border-border pb-5">
-          <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">(e) FAQ</span>
+          <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">FAQ</span>
           <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Before you register</h2>
         </div>
         <div className="mt-8 max-w-3xl">
