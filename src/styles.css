@@ -180,10 +180,6 @@
     background: white;
   }
 
-  body > * {
-    display: none !important;
-  }
-
   .no-print {
     display: none !important;
   }
@@ -192,13 +188,15 @@
     display: flex !important;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
     padding: 0;
     margin: 0;
+    background: white !important;
+    min-height: 100vh;
   }
 
   .badge-card {
     box-shadow: none !important;
+    border: 1px solid #d1d5db !important;
     margin: 0 auto;
   }
 }
