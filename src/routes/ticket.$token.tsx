@@ -76,7 +76,7 @@ function TicketPage() {
     );
   }
 
-  if (error || !data) {
+  if (error || !data || (data as any).error) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="max-w-md text-center">
@@ -84,7 +84,7 @@ function TicketPage() {
             Invalid Ticket
           </h1>
           <p className="mt-3 font-body text-sm text-muted-foreground">
-            {error}
+            {(data as any)?.error || error || "This ticket could not be found."}
           </p>
         </div>
       </div>
