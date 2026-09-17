@@ -59,8 +59,8 @@ function AdminAttendees() {
         ...(checkInParam && { checkInStatus: checkInParam }),
       },
     })
-      .then((res) => {
-        const raw = res?.data?.attendees ?? [];
+      .then((res: any) => {
+        const raw = res?.attendees ?? [];
         const mapped: Attendee[] = raw.map((a: any) => ({
           id: a.id,
           attendeeId: a.attendeeId,
@@ -79,12 +79,12 @@ function AdminAttendees() {
           paidAt: a.paidAt ?? null,
           ticketReference: a.ticketReference ?? null,
           ticketStatus: a.ticketStatus ?? "",
-          checkInStatus: a.checkedIn ? "CHECKED_IN" : "NOT_CHECKED_IN",
-          checkInTime: a.checkedInAt ?? null,
+          checkInStatus: a.checkInStatus ?? "NOT_CHECKED_IN",
+          checkInTime: a.checkInTime ?? null,
           createdAt: a.createdAt,
         }));
         setAttendees(mapped);
-        setPagination(res?.data?.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 0 });
+        setPagination(res?.pagination ?? { page: 1, limit: 20, total: 0, totalPages: 0 });
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -111,9 +111,9 @@ function AdminAttendees() {
 
   const handleExport = async () => {
     try {
-      const res = await exportAttendeesFn({ data: {} });
-      const csv = res?.data?.csv ?? "";
-      const filename = res?.data?.filename ?? "attendees.csv";
+      const res: any = await exportAttendeesFn({ data: {} });
+      const csv = res?.csv ?? "";
+      const filename = res?.filename ?? "attendees.csv";
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");

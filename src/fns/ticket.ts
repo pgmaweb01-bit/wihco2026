@@ -43,11 +43,11 @@ export const getTicketByTokenFn = createServerFn({ method: "POST" })
         name: ticket.attendee.category.name,
       },
       event: {
-        name: ticket.eventName,
-        theme: ticket.eventTheme,
-        subtitle: ticket.eventSubtitle,
-        date: ticket.eventDate,
-        venue: ticket.eventVenue,
+        name: "WIHCN CON III",
+        theme: "Beyond Leadership",
+        subtitle: "Building Legacy & Advancing Innovation",
+        date: "Friday, 30 October 2026",
+        venue: "Harbour Point, Lagos",
       },
       qrCode,
     };

@@ -9,15 +9,15 @@ export const getAdminStatsFn = createServerFn({ method: "POST" })
         prisma.attendee.count(),
         prisma.attendee.count({ where: { paymentStatus: "PAID" } }),
         prisma.attendee.count({ where: { paymentStatus: "PENDING" } }),
-        prisma.ticket.count({ where: { status: "CHECKED_IN" } }),
+        prisma.checkIn.count(),
         prisma.attendee.count({
           where: { category: { name: "General" } },
         }),
         prisma.attendee.count({
-          where: { category: { name: "Speakers" } },
+          where: { category: { name: "Speaker" } },
         }),
         prisma.attendee.count({
-          where: { category: { name: "Panelists" } },
+          where: { category: { name: "Panelist" } },
         }),
       ]);
 

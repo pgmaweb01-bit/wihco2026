@@ -106,13 +106,18 @@ export const createRegistrationFn = createServerFn({
       const ticket = await prisma.ticket.findUnique({ where: { attendeeId: attendee.id } });
       const ticketUrl = `${process.env.APP_URL}/ticket/${ticket?.qrToken}`;
 
-      await sendConfirmationEmail({
-        to: attendee.email,
-        attendeeName: `${attendee.firstName} ${attendee.lastName}`,
-        attendeeId: uniqueAttendeeId,
-        category: category.name,
-        ticketUrl,
-      });
+      try {
+        await sendConfirmationEmail({
+          to: attendee.email,
+          attendeeName: `${attendee.firstName} ${attendee.lastName}`,
+          attendeeId: uniqueAttendeeId,
+          category: category.name,
+          ticketUrl,
+        });
+        console.log(`Email sent to ${attendee.email}`);
+      } catch (emailErr) {
+        console.error("Failed to send confirmation email:", emailErr);
+      }
     }
 
     return {

@@ -171,13 +171,18 @@ export const processWebhookFn = createServerFn({
 
         if (attendee) {
           const ticketUrl = `${process.env.APP_URL}/ticket/${attendee.ticket?.qrToken}`;
-          await sendConfirmationEmail({
-            to: attendee.email,
-            attendeeName: `${attendee.firstName} ${attendee.lastName}`,
-            attendeeId: uniqueAttendeeId,
-            category: attendee.category.name,
-            ticketUrl,
-          });
+          try {
+            await sendConfirmationEmail({
+              to: attendee.email,
+              attendeeName: `${attendee.firstName} ${attendee.lastName}`,
+              attendeeId: uniqueAttendeeId,
+              category: attendee.category.name,
+              ticketUrl,
+            });
+            console.log(`Confirmation email sent to ${attendee.email}`);
+          } catch (emailErr) {
+            console.error("Failed to send confirmation email:", emailErr);
+          }
         }
       }
     }
