@@ -94,8 +94,9 @@ function Home() {
             <span className="size-1.5 rounded-full bg-accent" />
             {EVENT.hashtag}
           </div>
-          <p className="animate-rise mt-8 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-white/70">
-            {EVENT.edition}
+          <p className="animate-rise mt-8 flex items-baseline gap-3 font-body text-[0.2em] uppercase tracking-[0.2em] text-white/70 [animation-delay:40ms]">
+            <span className="font-display text-[3.5rem] font-black leading-none text-accent">3RD</span>
+            <span className="font-body text-sm font-bold leading-tight">Annual<br />Conference</span>
           </p>
           <h1 className="animate-rise mt-3 font-display text-[clamp(3.5rem,11vw,9rem)] font-black leading-[0.86] tracking-tight text-white [animation-delay:80ms]">
             BEYOND
