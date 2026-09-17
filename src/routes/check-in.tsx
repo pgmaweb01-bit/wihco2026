@@ -162,7 +162,7 @@ function CheckInPage() {
               <p className="mb-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Or enter token manually
               </p>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <input
                   ref={inputRef}
                   type="text"
@@ -177,7 +177,7 @@ function CheckInPage() {
                 <button
                   onClick={() => processToken(manualToken)}
                   disabled={!manualToken.trim() || state === "scanning"}
-                  className="rounded-lg bg-[#082266] px-8 py-4 font-body text-base font-bold text-white transition-all hover:bg-[#082266]/90 active:scale-[0.98] disabled:opacity-50"
+                  className="w-full rounded-lg bg-[#082266] px-8 py-4 font-body text-base font-bold text-white transition-all hover:bg-[#082266]/90 active:scale-[0.98] disabled:opacity-50 sm:w-auto"
                 >
                   {state === "scanning" ? "..." : "Scan"}
                 </button>

@@ -102,7 +102,7 @@ function Home() {
         </div>
         <div className="relative mx-auto max-w-7xl px-6 pt-20 pb-24">
           <p className="animate-rise mt-8 flex items-baseline gap-3 font-body text-[0.2em] uppercase tracking-[0.2em] text-white/70 [animation-delay:40ms]">
-            <span className="font-display text-[3.5rem] font-black leading-none text-accent">3RD</span>
+            <span className="font-display text-[clamp(2.5rem,10vw,3.5rem)] font-black leading-none text-accent">3RD</span>
             <span className="font-body text-sm font-bold leading-tight">Annual<br />Conference</span>
           </p>
           <h1 className="animate-rise mt-3 font-display text-[clamp(3.5rem,11vw,9rem)] font-black leading-[0.86] tracking-tight text-white [animation-delay:80ms]">
@@ -147,7 +147,7 @@ function Home() {
             <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
               (a) About
             </span>
-            <h2 className="mt-2 font-display text-4xl font-extrabold tracking-tight">A day for the people building care</h2>
+            <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">A day for the people building care</h2>
           </div>
         </div>
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-center">
@@ -159,7 +159,7 @@ function Home() {
             </p>
             <div className="mt-8 grid gap-5 sm:grid-cols-3">
               {PILLARS.map((p) => (
-                <div key={p.title} className="rounded-2xl border border-border bg-background/70 p-7 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10">
+                <div key={p.title} className="rounded-2xl border border-border bg-background/70 p-5 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 sm:p-7">
                   <span className="font-mono text-xs text-accent">{p.n}</span>
                   <h3 className="mt-4 font-display text-3xl font-extrabold tracking-tight uppercase">{p.title}</h3>
                   <p className="mt-3 font-body text-sm text-pretty text-muted-foreground">{p.body}</p>
@@ -183,13 +183,13 @@ function Home() {
         <div className="flex items-end justify-between border-b border-border pb-5">
           <div>
             <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">(b) Theme</span>
-            <h2 className="mt-2 font-display text-4xl font-extrabold tracking-tight">{EVENT.theme}</h2>
+            <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{EVENT.theme}</h2>
           </div>
           <p className="hidden max-w-[30ch] text-right font-body text-sm text-muted-foreground sm:block">{EVENT.subtitle}</p>
         </div>
         <div className="mt-8 grid gap-5 md:grid-cols-3">
           {THEME_IDEAS.map((t) => (
-            <div key={t.title} className="rounded-2xl border border-border bg-background/70 p-7 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10">
+            <div key={t.title} className="rounded-2xl border border-border bg-background/70 p-5 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 sm:p-7">
               <span className="font-mono text-xs text-accent">{t.n}</span>
               <h3 className="mt-4 font-display text-3xl font-extrabold tracking-tight uppercase">{t.title}</h3>
               <p className="mt-3 font-body text-sm text-pretty text-muted-foreground">{t.body}</p>
@@ -203,7 +203,7 @@ function Home() {
         <div className="mx-auto grid max-w-7xl items-stretch gap-8 px-6 py-20 lg:grid-cols-2 lg:gap-12">
           <div className="order-2 flex flex-col justify-center lg:order-1">
             <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Keynote Speaker</span>
-            <h2 className="mt-4 font-display text-5xl font-extrabold tracking-tight text-foreground">{KEYNOTE_SPEAKER.name}</h2>
+            <h2 className="mt-4 font-display text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">{KEYNOTE_SPEAKER.name}</h2>
             <p className="mt-3 font-body text-base font-semibold text-accent">{KEYNOTE_SPEAKER.title}, {KEYNOTE_SPEAKER.organisation}</p>
             <div className="mt-7 rounded-xl border border-border bg-background/70 p-5 backdrop-blur-md">
               <span className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Biography</span>
@@ -218,9 +218,9 @@ function Home() {
 
       {/* SPEAKERS */}
       <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="flex items-end justify-between border-b border-border pb-5">
+        <div className="border-b border-border pb-5">
           <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Speakers &amp; Panelists</span>
-          <h2 className="font-display text-4xl font-extrabold tracking-tight">The voices on stage</h2>
+          <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">The voices on stage</h2>
         </div>
         {speakers.length === 0 ? (
           <p className="mt-8 max-w-[48ch] font-body text-sm text-muted-foreground">Speakers and panelists will be announced here as they are confirmed.</p>
@@ -244,11 +244,11 @@ function Home() {
       <section id="programme" className="mx-auto max-w-7xl px-6 py-20">
         <div className="flex items-end justify-between border-b border-border pb-5">
           <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">(c) Programme</span>
-          <h2 className="font-display text-4xl font-extrabold tracking-tight">The day, in order</h2>
+          <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">The day, in order</h2>
         </div>
         <ol className="mt-8">
           {programme.map((s, i) => (
-            <li key={s.id} className={`grid grid-cols-[110px_1fr] gap-6 py-7 transition-colors hover:bg-background/60 sm:grid-cols-[150px_1fr] ${i < programme.length - 1 ? "border-b border-border" : ""}`}>
+            <li key={s.id} className={`grid grid-cols-[80px_1fr] gap-4 py-7 transition-colors hover:bg-background/60 sm:grid-cols-[150px_1fr] sm:gap-6 ${i < programme.length - 1 ? "border-b border-border" : ""}`}>
               <div>
                 <span className="font-mono text-sm font-bold text-foreground">{s.startTime}</span>
                 <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{s.endTime}</span>
@@ -269,7 +269,7 @@ function Home() {
             <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
               Past Events
             </span>
-            <h2 className="mt-2 font-display text-4xl font-extrabold tracking-tight">Moments that matter</h2>
+            <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Moments that matter</h2>
           </div>
         </div>
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3">
@@ -289,7 +289,7 @@ function Home() {
         <div className="grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-center">
           <div>
             <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">(d) Venue</span>
-            <h2 className="mt-4 font-display text-5xl font-extrabold tracking-tight">{EVENT.venue}, {EVENT.city}</h2>
+            <h2 className="mt-4 font-display text-3xl font-extrabold tracking-tight sm:text-5xl">{EVENT.venue}, {EVENT.city}</h2>
             <p className="mt-4 max-w-[38ch] font-body text-sm text-pretty text-muted-foreground">A waterfront venue for the day's plenary and the evening after party. Full directions will be shared with registered attendees.</p>
             <a href="https://www.google.com/maps/search/?api=1&query=Harbour+Point+Lagos" target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-lg border border-border bg-background/60 px-5 py-3 font-body text-sm font-bold text-foreground backdrop-blur-md transition-all hover:border-accent/40 hover:text-accent">Get Directions</a>
           </div>
@@ -301,7 +301,7 @@ function Home() {
       <section id="faq" className="mx-auto max-w-7xl px-6 pb-20">
         <div className="flex items-end justify-between border-b border-border pb-5">
           <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">(e) FAQ</span>
-          <h2 className="font-display text-4xl font-extrabold tracking-tight">Before you register</h2>
+          <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Before you register</h2>
         </div>
         <div className="mt-8 max-w-3xl">
           {faqs.map((f) => (
