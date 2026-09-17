@@ -81,22 +81,28 @@ function Home() {
 
       {/* HERO */}
       <header id="home" className="relative overflow-hidden">
-        <div className="pointer-events-none absolute -top-24 -right-20 size-[520px] rounded-full bg-accent/20 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 -left-24 size-[420px] rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute inset-0 z-0">
+          <img
+            src="/Hero section immage.jpg"
+            alt="WIHCN Conference"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/75 to-primary/60" />
+        </div>
         <div className="relative mx-auto max-w-7xl px-6 pt-20 pb-24">
-          <div className="animate-rise inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.18em] text-primary backdrop-blur-md">
+          <div className="animate-rise inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.18em] text-white backdrop-blur-md">
             <span className="size-1.5 rounded-full bg-accent" />
             {EVENT.hashtag}
           </div>
-          <p className="animate-rise mt-8 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+          <p className="animate-rise mt-8 font-body text-[11px] font-bold uppercase tracking-[0.2em] text-white/70">
             {EVENT.edition}
           </p>
-          <h1 className="animate-rise mt-3 font-display text-[clamp(3.5rem,11vw,9rem)] font-black leading-[0.86] tracking-tight text-foreground [animation-delay:80ms]">
+          <h1 className="animate-rise mt-3 font-display text-[clamp(3.5rem,11vw,9rem)] font-black leading-[0.86] tracking-tight text-white [animation-delay:80ms]">
             BEYOND
             <br />
             LEADERSHIP
           </h1>
-          <p className="animate-rise mt-6 max-w-[42ch] font-body text-lg text-pretty text-muted-foreground [animation-delay:160ms]">
+          <p className="animate-rise mt-6 max-w-[42ch] font-body text-lg text-pretty text-white/80 [animation-delay:160ms]">
             {EVENT.subtitle} — {EVENT.message.toLowerCase()}
           </p>
           <div className="animate-rise mt-9 flex flex-wrap items-center gap-3 [animation-delay:240ms]">
@@ -108,18 +114,18 @@ function Home() {
             </Link>
             <a
               href="#programme"
-              className="rounded-lg border border-border bg-background/60 px-6 py-3 font-body text-sm font-bold text-foreground backdrop-blur-md transition-all hover:border-accent/40 hover:text-accent"
+              className="rounded-lg border border-white/30 bg-white/10 px-6 py-3 font-body text-sm font-bold text-white backdrop-blur-md transition-all hover:bg-white/20"
             >
               View Programme
             </a>
           </div>
-          <dl className="animate-rise mt-12 grid max-w-2xl grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4 [animation-delay:320ms]">
+          <dl className="animate-rise mt-12 grid max-w-2xl grid-cols-2 gap-px overflow-hidden rounded-xl border border-white/20 bg-white/10 sm:grid-cols-4 [animation-delay:320ms] backdrop-blur-md">
             {DETAILS.map((d) => (
-              <div key={d.label} className="bg-background/80 px-4 py-3 backdrop-blur-md">
-                <dt className="font-body text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              <div key={d.label} className="bg-white/10 px-4 py-3 backdrop-blur-md">
+                <dt className="font-body text-[10px] font-bold uppercase tracking-[0.14em] text-white/60">
                   {d.label}
                 </dt>
-                <dd className="mt-1 font-body text-sm font-semibold">{d.value}</dd>
+                <dd className="mt-1 font-body text-sm font-semibold text-white">{d.value}</dd>
               </div>
             ))}
           </dl>
@@ -135,23 +141,32 @@ function Home() {
             </span>
             <h2 className="mt-2 font-display text-4xl font-extrabold tracking-tight">A day for the people building care</h2>
           </div>
-          <p className="hidden max-w-[32ch] text-right font-body text-sm text-muted-foreground sm:block">
-            Healthcare leadership, innovation and collaboration in one room.
-          </p>
         </div>
-        <p className="mt-8 max-w-[62ch] font-body text-lg text-pretty text-muted-foreground">
-          {EVENT.name} brings together healthcare leaders, clinicians, innovators and partners for a
-          single day of collaboration and professional development — a working space for the people
-          shaping the future of care.
-        </p>
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {PILLARS.map((p) => (
-            <div key={p.title} className="rounded-2xl border border-border bg-background/70 p-7 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10">
-              <span className="font-mono text-xs text-accent">{p.n}</span>
-              <h3 className="mt-4 font-display text-3xl font-extrabold tracking-tight uppercase">{p.title}</h3>
-              <p className="mt-3 font-body text-sm text-pretty text-muted-foreground">{p.body}</p>
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+          <div>
+            <p className="max-w-[62ch] font-body text-lg text-pretty text-muted-foreground">
+              {EVENT.name} brings together healthcare leaders, clinicians, innovators and partners for a
+              single day of collaboration and professional development — a working space for the people
+              shaping the future of care.
+            </p>
+            <div className="mt-8 grid gap-5 sm:grid-cols-3">
+              {PILLARS.map((p) => (
+                <div key={p.title} className="rounded-2xl border border-border bg-background/70 p-7 backdrop-blur-xl transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10">
+                  <span className="font-mono text-xs text-accent">{p.n}</span>
+                  <h3 className="mt-4 font-display text-3xl font-extrabold tracking-tight uppercase">{p.title}</h3>
+                  <p className="mt-3 font-body text-sm text-pretty text-muted-foreground">{p.body}</p>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+          <div>
+            <img
+              src="/B7K_8176-WIHCN2025-059.jpg"
+              alt="WIHCN Conference panel discussion"
+              loading="lazy"
+              className="aspect-4/3 w-full rounded-2xl object-cover"
+            />
+          </div>
         </div>
       </section>
 
@@ -237,6 +252,28 @@ function Home() {
             </li>
           ))}
         </ol>
+      </section>
+
+      {/* GALLERY */}
+      <section className="mx-auto max-w-7xl px-6 py-20">
+        <div className="flex items-end justify-between border-b border-border pb-5">
+          <div>
+            <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
+              Past Events
+            </span>
+            <h2 className="mt-2 font-display text-4xl font-extrabold tracking-tight">Moments that matter</h2>
+          </div>
+        </div>
+        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3">
+          <img src="/Hero section immage.jpg" alt="Conference audience" loading="lazy" className="col-span-2 aspect-16/9 w-full rounded-2xl object-cover md:col-span-1 md:aspect-4/5" />
+          <img src="/WIHCN-a-405.jpg" alt="Panel discussion" loading="lazy" className="aspect-4/3 w-full rounded-2xl object-cover" />
+          <img src="/WIHCN-a-527.jpg" alt="Attendees networking" loading="lazy" className="aspect-4/3 w-full rounded-2xl object-cover" />
+          <img src="/WIHCN-a-391.jpg" alt="Keynote speaker" loading="lazy" className="aspect-4/3 w-full rounded-2xl object-cover" />
+          <img src="/WIHCN-a-351.jpg" alt="WIHCN panel" loading="lazy" className="aspect-4/3 w-full rounded-2xl object-cover" />
+          <img src="/WIHCN-a-227.jpg" alt="Conference attendees" loading="lazy" className="hidden md:block aspect-4/3 w-full rounded-2xl object-cover" />
+          <img src="/WIHCN-a-149.jpg" alt="Guests at WIHCN" loading="lazy" className="hidden md:block aspect-4/3 w-full rounded-2xl object-cover" />
+          <img src="/IMG-20251222-WA0005.jpg" alt="WIHCN launch event" loading="lazy" className="hidden md:block aspect-4/3 w-full rounded-2xl object-cover" />
+        </div>
       </section>
 
       {/* VENUE */}
