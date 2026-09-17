@@ -159,23 +159,46 @@
   }
 }
 
-/* Print styles for badges */
+/* Print styles for conference badge */
+.no-print {
+  display: block !important;
+}
+
+.print-badge {
+  display: none !important;
+}
+
 @media print {
-  body * {
-    visibility: hidden;
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
-  .badge-print,
-  .badge-print * {
-    visibility: visible;
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
   }
-  .badge-print {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100mm;
-    height: 140mm;
+
+  body > * {
+    display: none !important;
   }
+
   .no-print {
     display: none !important;
+  }
+
+  .print-badge {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+  }
+
+  .badge-card {
+    box-shadow: none !important;
+    margin: 0 auto;
   }
 }

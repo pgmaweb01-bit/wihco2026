@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useRef } from "react";
-import { scanTicketFn } from "@/fns/checkin";
-import { confirmCheckInFn } from "@/fns/checkin";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { scanTicketFn, confirmCheckInFn } from "@/fns/checkin";
 
 export const Route = createFileRoute("/check-in")({
   head: () => ({
@@ -38,13 +37,67 @@ function CheckInPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [manualToken, setManualToken] = useState("");
   const [currentToken, setCurrentToken] = useState("");
+  const [scannerActive, setScannerActive] = useState(false);
+  const scannerRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const stopScanner = useCallback(async () => {
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+      } catch {}
+      scannerRef.current = null;
+    }
+    setScannerActive(false);
+  }, []);
+
+  const startScanner = useCallback(async () => {
+    if (scannerActive) return;
+    try {
+      const { Html5Qrcode } = await import("html5-qrcode");
+
+      await new Promise((r) => setTimeout(r, 100));
+
+      const scannerId = "qr-reader";
+      const container = document.getElementById(scannerId);
+      if (!container) return;
+
+      const scanner = new Html5Qrcode(scannerId);
+      scannerRef.current = scanner;
+
+      await scanner.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+        },
+        (decodedText: string) => {
+          processToken(decodedText);
+          stopScanner();
+        },
+        () => {},
+      );
+      setScannerActive(true);
+    } catch (err) {
+      console.error("Scanner start failed:", err);
+      setScannerActive(false);
+    }
+  }, [scannerActive, stopScanner]);
+
+  useEffect(() => {
+    return () => {
+      stopScanner();
+    };
+  }, [stopScanner]);
 
   const processToken = async (qrToken: string) => {
     if (!qrToken.trim()) return;
 
     setState("scanning");
     setCurrentToken(qrToken.trim());
+    await stopScanner();
 
     try {
       const scanData = await scanTicketFn({ data: { qrToken: qrToken.trim() } });
@@ -100,62 +153,213 @@ function CheckInPage() {
     }
   };
 
-  const reset = () => {
+  const reset = async () => {
     setState("idle");
     setAttendee(null);
     setManualToken("");
     setCurrentToken("");
     setErrorMessage("");
-    setTimeout(() => inputRef.current?.focus(), 100);
+    setTimeout(() => {
+      if (state === "success" || state === "already-checked-in" || state === "invalid" || state === "error") {
+        startScanner();
+      } else {
+        inputRef.current?.focus();
+      }
+    }, 100);
   };
 
-  const badgeLabel = {
-    GENERAL: "Standard Badge",
-    SPEAKER: "Banner Badge",
-    PANELIST: "Colour-Strip Badge",
+  const printBadge = () => {
+    window.print();
   };
+
+  const badgeColorMap: Record<string, { bg: string; accent: string; label: string }> = {
+    GENERAL: { bg: "#082266", accent: "#082266", label: "GENERAL" },
+    SPEAKER: { bg: "#B8860B", accent: "#B8860B", label: "SPEAKER" },
+    PANELIST: { bg: "#23A455", accent: "#23A455", label: "PANELIST" },
+  };
+
+  const badge = badgeColorMap[badgeType] ?? badgeColorMap.GENERAL;
 
   return (
     <div className="min-h-screen bg-background font-body text-foreground">
-      {/* Header */}
-      <div className="sticky top-0 z-50 border-b border-border bg-[#082266] px-6 py-5 text-center text-white shadow-lg">
+      {/* Screen header — hidden on print */}
+      <div className="sticky top-0 z-50 border-b border-border bg-[#082266] px-6 py-5 text-center text-white shadow-lg no-print">
         <p className="font-display text-xl font-extrabold tracking-tight">
           WIHCN CON III — Check-In
         </p>
       </div>
 
-      <div className="mx-auto max-w-lg px-4 py-8">
+      {/* ============ PRINTABLE BADGE — only visible when printing ============ */}
+      {state === "success" && attendee && (
+        <div className="print-badge">
+          <div
+            className="badge-card"
+            style={{
+              width: "4in",
+              height: "6in",
+              fontFamily: "Montserrat, Arial, sans-serif",
+              position: "relative",
+              overflow: "hidden",
+              backgroundColor: "#ffffff",
+              color: "#1a1a1a",
+              display: "flex",
+              flexDirection: "column",
+              borderRadius: "12px",
+              border: "2px solid #e5e7eb",
+              pageBreakInside: "avoid",
+            }}
+          >
+            {/* Top colour strip */}
+            <div
+              style={{
+                backgroundColor: badge.accent,
+                padding: "16px 20px",
+                textAlign: "center",
+              }}
+            >
+              <img
+                src="/Logo.png"
+                alt="WIHCN"
+                style={{ height: "40px", margin: "0 auto 8px", display: "block", filter: "brightness(0) invert(1)" }}
+              />
+              <p style={{ color: "#ffffff", fontSize: "11px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", margin: 0 }}>
+                Women in Healthcare Conference
+              </p>
+            </div>
+
+            {/* Badge type strip */}
+            <div
+              style={{
+                backgroundColor: "#f3f4f6",
+                borderBottom: `3px solid ${badge.accent}`,
+                padding: "10px 20px",
+                textAlign: "center",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "22px",
+                  fontWeight: 800,
+                  letterSpacing: "0.12em",
+                  color: badge.accent,
+                  margin: 0,
+                  textTransform: "uppercase",
+                }}
+              >
+                {badge.label}
+              </p>
+            </div>
+
+            {/* Name & info */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 20px", textAlign: "center" }}>
+              <p
+                style={{
+                  fontSize: "28px",
+                  fontWeight: 800,
+                  lineHeight: 1.15,
+                  margin: "0 0 4px 0",
+                  color: "#1a1a1a",
+                  textTransform: "uppercase",
+                }}
+              >
+                {attendee.firstName}
+              </p>
+              <p
+                style={{
+                  fontSize: "28px",
+                  fontWeight: 800,
+                  lineHeight: 1.15,
+                  margin: "0 0 12px 0",
+                  color: "#1a1a1a",
+                  textTransform: "uppercase",
+                }}
+              >
+                {attendee.lastName}
+              </p>
+
+              {attendee.jobTitle && (
+                <p style={{ fontSize: "13px", color: "#6b7280", margin: "0 0 2px 0" }}>
+                  {attendee.jobTitle}
+                </p>
+              )}
+              {attendee.organisation && (
+                <p style={{ fontSize: "14px", fontWeight: 600, color: "#374151", margin: "0 0 16px 0" }}>
+                  {attendee.organisation}
+                </p>
+              )}
+
+              <div style={{ width: "60px", height: "1px", backgroundColor: "#d1d5db", margin: "0 0 16px 0" }} />
+
+              <p style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.16em", color: "#9ca3af", textTransform: "uppercase", margin: "0 0 4px 0" }}>
+                Attendee ID
+              </p>
+              <p style={{ fontSize: "14px", fontWeight: 700, fontFamily: "monospace", color: "#374151", margin: 0 }}>
+                {attendee.attendeeId}
+              </p>
+            </div>
+
+            {/* Bottom strip */}
+            <div
+              style={{
+                backgroundColor: badge.accent,
+                padding: "12px 20px",
+                textAlign: "center",
+              }}
+            >
+              <p style={{ color: "#ffffff", fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", margin: 0 }}>
+                WIHCN CON III — 30 October 2026 — Harbour Point, Lagos
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============ SCREEN UI ============ */}
+      <div className="mx-auto max-w-lg px-4 py-8 no-print">
         {/* Idle / Scan State */}
         {(state === "idle" || state === "scanning") && (
           <div className="text-center">
-            <div className="mb-8">
-              <div className="mx-auto mb-4 grid size-28 place-items-center rounded-full border-4 border-dashed border-[#082266]/30 bg-[#082266]/5">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="size-14 text-[#082266]"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"
-                  />
-                </svg>
-              </div>
+            {/* QR Scanner area */}
+            <div className="mb-6">
+              <div
+                id="qr-reader"
+                ref={containerRef}
+                className="mx-auto overflow-hidden rounded-xl border-2 border-[#082266]/20"
+                style={{ maxWidth: "350px", display: scannerActive ? "block" : "none" }}
+              />
+              {!scannerActive && (
+                <div className="mx-auto mb-4 grid size-28 place-items-center rounded-full border-4 border-dashed border-[#082266]/30 bg-[#082266]/5">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-14 text-[#082266]">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
+                  </svg>
+                </div>
+              )}
+
               <h2 className="font-display text-2xl font-extrabold text-[#082266]">
-                Scan QR Code
+                {scannerActive ? "Scanning..." : "Scan QR Code"}
               </h2>
               <p className="mt-2 font-body text-sm text-muted-foreground">
-                Point the camera at the attendee's QR code
+                {scannerActive ? "Hold the QR code in front of the camera" : "Start the camera or enter token manually"}
               </p>
+            </div>
+
+            <div className="mb-6 flex flex-col gap-3">
+              {!scannerActive ? (
+                <button
+                  onClick={startScanner}
+                  className="w-full rounded-lg bg-[#082266] px-6 py-4 font-body text-base font-bold text-white transition-all hover:bg-[#082266]/90 active:scale-[0.98]"
+                >
+                  Start Camera Scanner
+                </button>
+              ) : (
+                <button
+                  onClick={stopScanner}
+                  className="w-full rounded-lg border-2 border-red-500 bg-red-50 px-6 py-4 font-body text-base font-bold text-red-600 transition-all hover:bg-red-100 active:scale-[0.98]"
+                >
+                  Stop Scanner
+                </button>
+              )}
             </div>
 
             <div className="mb-8">
@@ -179,7 +383,7 @@ function CheckInPage() {
                   disabled={!manualToken.trim() || state === "scanning"}
                   className="w-full rounded-lg bg-[#082266] px-8 py-4 font-body text-base font-bold text-white transition-all hover:bg-[#082266]/90 active:scale-[0.98] disabled:opacity-50 sm:w-auto"
                 >
-                  {state === "scanning" ? "..." : "Scan"}
+                  {state === "scanning" ? "..." : "Look Up"}
                 </button>
               </div>
             </div>
@@ -278,25 +482,26 @@ function CheckInPage() {
               </div>
             </div>
 
-            <div className="mt-6 rounded-xl border border-[#082266]/20 bg-[#082266]/5 p-4">
+            <div className="mt-4 rounded-xl border border-[#082266]/20 bg-[#082266]/5 p-4">
               <p className="font-body text-xs font-bold uppercase text-[#082266]">
-                Badge: {badgeLabel[badgeType]}
+                Badge: {badge.label} — Ready to Print
               </p>
             </div>
 
-            <button
-              onClick={() => window.print()}
-              className="mt-6 w-full rounded-lg bg-[#082266] px-6 py-4 font-body text-base font-bold text-white transition-all hover:bg-[#082266]/90 active:scale-[0.98]"
-            >
-              Print Badge
-            </button>
-
-            <button
-              onClick={reset}
-              className="mt-3 w-full rounded-lg border border-border bg-background px-6 py-4 font-body text-base font-bold transition-all hover:bg-secondary active:scale-[0.98]"
-            >
-              Scan Next
-            </button>
+            <div className="mt-6 flex flex-col gap-3">
+              <button
+                onClick={printBadge}
+                className="w-full rounded-lg bg-[#082266] px-6 py-4 font-body text-base font-bold text-white transition-all hover:bg-[#082266]/90 active:scale-[0.98]"
+              >
+                Print Conference Badge
+              </button>
+              <button
+                onClick={reset}
+                className="w-full rounded-lg border border-border bg-background px-6 py-4 font-body text-base font-bold transition-all hover:bg-secondary active:scale-[0.98]"
+              >
+                Scan Next
+              </button>
+            </div>
           </div>
         )}
 

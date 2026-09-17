@@ -13,7 +13,7 @@ export const scanTicketFn = createServerFn({ method: "POST" })
       return { valid: false, error: "INVALID_TICKET" };
     }
 
-    if (ticket.status === "CHECKED_IN") {
+    if (ticket.attendee.checkInStatus === "CHECKED_IN") {
       return {
         valid: true,
         alreadyCheckedIn: true,
@@ -26,7 +26,7 @@ export const scanTicketFn = createServerFn({ method: "POST" })
           jobTitle: ticket.attendee.jobTitle,
           category: ticket.attendee.category.name,
         },
-        checkInTime: ticket.checkedInAt,
+        checkInTime: ticket.attendee.checkInTime?.toISOString() ?? null,
       };
     }
 
@@ -57,7 +57,7 @@ export const confirmCheckInFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     try {
-      const result = await processCheckIn(data);
+      const result = await processCheckIn(data.qrToken, data.checkedInBy, data.device);
       return result;
     } catch (error) {
       if (error instanceof Error && error.message === "INVALID_TICKET") {
