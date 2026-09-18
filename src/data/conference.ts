@@ -27,10 +27,10 @@ export const CONTACT = {
   phone: "+234 916 984 3432",
   website: "wihcn.org",
   socials: [
-    { label: "Instagram", href: "#" },
-    { label: "LinkedIn", href: "#" },
-    { label: "Facebook", href: "#" },
-    { label: "X", href: "#" },
+    { label: "Instagram", href: "https://www.instagram.com/womeninhealthcarenetwork/" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/company/101134347/" },
+    { label: "X", href: "https://twitter.com/wihcnetwork" },
+    { label: "YouTube", href: "https://www.youtube.com/@WomenInHealthcareNetwork-WIHCN" },
   ],
 } as const;
 
