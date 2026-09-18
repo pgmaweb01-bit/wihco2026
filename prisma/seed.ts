@@ -20,40 +20,39 @@ async function main() {
   console.log("✓ Admin user created (admin@wihcn.org)");
 
   // ─── Registration Categories ─────────────────────────
+  // 3 categories × 2 periods. Frontend filters by current date.
   const categories = [
-    // Early Bird: 21 Sep – 9 Oct
     {
-      id: "member-early",
+      id: "member",
       name: "Member",
-      description: "WIHCN member — Early Bird pricing (21 Sep – 9 Oct).",
+      description: "WIHCN member.",
       price: 70000,
       currency: "NGN",
       period: "early_bird",
       active: true,
     },
     {
-      id: "non-member-early",
+      id: "non-member",
       name: "Non-Member",
-      description: "Standard conference access — Early Bird pricing (21 Sep – 9 Oct).",
+      description: "Standard conference access.",
       price: 100000,
       currency: "NGN",
       period: "early_bird",
       active: true,
     },
     {
-      id: "join-attend-early",
+      id: "join-attend",
       name: "Join + Attend",
-      description: "Become a member and register in one step — Early Bird pricing (21 Sep – 9 Oct).",
+      description: "Become a member and register in one step.",
       price: 120000,
       currency: "NGN",
       period: "early_bird",
       active: true,
     },
-    // Late: 12 – 28 Oct
     {
       id: "member-late",
       name: "Member",
-      description: "WIHCN member — Late registration (12 – 28 Oct).",
+      description: "WIHCN member.",
       price: 100000,
       currency: "NGN",
       period: "late",
@@ -62,7 +61,7 @@ async function main() {
     {
       id: "non-member-late",
       name: "Non-Member",
-      description: "Standard conference access — Late registration (12 – 28 Oct).",
+      description: "Standard conference access.",
       price: 130000,
       currency: "NGN",
       period: "late",
@@ -71,7 +70,7 @@ async function main() {
     {
       id: "join-attend-late",
       name: "Join + Attend",
-      description: "Become a member and register in one step — Late registration (12 – 28 Oct).",
+      description: "Become a member and register in one step.",
       price: 150000,
       currency: "NGN",
       period: "late",
