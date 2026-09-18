@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { EVENT } from "@/data/conference";
 import { getProgrammeFn } from "@/fns/programme";
 import { getFaqsFn } from "@/fns/faqs";
-import { getGalleryImagesFn } from "@/fns/gallery";
+import { GALLERY_IMAGES } from "@/data/gallery";
 import venueImage from "@/assets/venue-harbour.jpg";
 
 export const Route = createFileRoute("/")({
@@ -32,7 +32,6 @@ export const Route = createFileRoute("/")({
 
 type ProgrammeSession = { id: string; title: string; description: string; startTime: string; endTime: string; sessionType: string };
 type Faq = { id: string; question: string; answer: string };
-type GalleryImage = { src: string; alt: string };
 
 const DETAILS = [
   { label: "Date", value: EVENT.dateLong },
@@ -67,12 +66,10 @@ const SESSION_TYPE_COLORS: Record<string, string> = {
 function Home() {
   const [programme, setProgramme] = useState<ProgrammeSession[]>([]);
   const [faqs, setFaqs] = useState<Faq[]>([]);
-  const [gallery, setGallery] = useState<GalleryImage[]>([]);
 
   useEffect(() => {
     getProgrammeFn().then(setProgramme).catch(() => {});
     getFaqsFn().then(setFaqs).catch(() => {});
-    getGalleryImagesFn().then(setGallery).catch(() => {});
   }, []);
 
   return (
@@ -232,7 +229,7 @@ function Home() {
           </div>
         </div>
         <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {gallery.map((img, i) => (
+          {GALLERY_IMAGES.map((img, i) => (
             <img
               key={img.src}
               src={img.src}
