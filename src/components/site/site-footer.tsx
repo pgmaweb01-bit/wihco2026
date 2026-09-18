@@ -72,7 +72,7 @@ export function SiteFooter() {
           <span className="font-body text-[10px] font-bold uppercase tracking-[0.16em] opacity-60">
             Follow
           </span>
-          <div className="mt-3 flex flex-wrap gap-3">
+          <div className="mt-3 flex flex-wrap gap-4">
             {CONTACT.socials.map((s) => {
               const Icon = SOCIAL_ICONS[s.label];
               return (
@@ -81,10 +81,10 @@ export function SiteFooter() {
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-sm opacity-80 transition-opacity hover:opacity-100"
+                  aria-label={s.label}
+                  className="opacity-80 transition-opacity hover:opacity-100"
                 >
-                  {Icon && <Icon className="size-5" />}
-                  <span className="font-body text-[11px] font-semibold uppercase tracking-[0.12em]">{s.label}</span>
+                  {Icon && <Icon className="size-6" />}
                 </a>
               );
             })}
