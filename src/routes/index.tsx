@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site/site-footer";
 import { EVENT } from "@/data/conference";
 import { getProgrammeFn } from "@/fns/programme";
 import { getFaqsFn } from "@/fns/faqs";
+import { getGalleryImagesFn } from "@/fns/gallery";
 import venueImage from "@/assets/venue-harbour.jpg";
 
 export const Route = createFileRoute("/")({
@@ -31,6 +32,7 @@ export const Route = createFileRoute("/")({
 
 type ProgrammeSession = { id: string; title: string; description: string; startTime: string; endTime: string; sessionType: string };
 type Faq = { id: string; question: string; answer: string };
+type GalleryImage = { src: string; alt: string };
 
 const DETAILS = [
   { label: "Date", value: EVENT.dateLong },
@@ -65,10 +67,12 @@ const SESSION_TYPE_COLORS: Record<string, string> = {
 function Home() {
   const [programme, setProgramme] = useState<ProgrammeSession[]>([]);
   const [faqs, setFaqs] = useState<Faq[]>([]);
+  const [gallery, setGallery] = useState<GalleryImage[]>([]);
 
   useEffect(() => {
     getProgrammeFn().then(setProgramme).catch(() => {});
     getFaqsFn().then(setFaqs).catch(() => {});
+    getGalleryImagesFn().then(setGallery).catch(() => {});
   }, []);
 
   return (
@@ -227,15 +231,18 @@ function Home() {
             <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight sm:text-4xl">Moments that matter</h2>
           </div>
         </div>
-        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3">
-          <img src="/Hero section immage.jpg" alt="Conference audience" loading="lazy" className="col-span-2 aspect-16/9 w-full rounded-2xl object-cover md:col-span-1 md:aspect-4/5" />
-          <img src="/WIHCN-a-405.jpg" alt="Panel discussion" loading="lazy" className="aspect-4/3 w-full rounded-2xl object-cover" />
-          <img src="/WIHCN-a-527.jpg" alt="Attendees networking" loading="lazy" className="aspect-4/3 w-full rounded-2xl object-cover" />
-          <img src="/WIHCN-a-391.jpg" alt="Keynote speaker" loading="lazy" className="aspect-4/3 w-full rounded-2xl object-cover" />
-          <img src="/WIHCN-a-351.jpg" alt="WIHCN panel" loading="lazy" className="aspect-4/3 w-full rounded-2xl object-cover" />
-          <img src="/WIHCN-a-227.jpg" alt="Conference attendees" loading="lazy" className="hidden md:block aspect-4/3 w-full rounded-2xl object-cover" />
-          <img src="/WIHCN-a-149.jpg" alt="Guests at WIHCN" loading="lazy" className="hidden md:block aspect-4/3 w-full rounded-2xl object-cover" />
-          <img src="/IMG-20251222-WA0005.jpg" alt="WIHCN launch event" loading="lazy" className="hidden md:block aspect-4/3 w-full rounded-2xl object-cover" />
+        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {gallery.map((img, i) => (
+            <img
+              key={img.src}
+              src={img.src}
+              alt={img.alt}
+              loading="lazy"
+              className={`w-full rounded-2xl object-cover ${
+                i === 0 ? "col-span-2 aspect-16/9 md:col-span-1 md:aspect-4/5" : "aspect-4/3"
+              }`}
+            />
+          ))}
         </div>
       </section>
 
