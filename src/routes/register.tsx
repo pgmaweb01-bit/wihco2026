@@ -74,10 +74,16 @@ function RegisterPage() {
 
   const period = getRegistrationPeriod();
 
+  const FALLBACK_CATEGORIES: Category[] = [
+    { id: "member", name: "Member", description: "WIHCN member.", price: null, currency: "NGN" },
+    { id: "non-member", name: "Non-Member", description: "Standard conference access.", price: null, currency: "NGN" },
+    { id: "join-attend", name: "Join + Attend", description: "Become a member and register in one step.", price: null, currency: "NGN" },
+  ];
+
   useEffect(() => {
     getCategoriesFn()
-      .then((data) => setCategories(data))
-      .catch(() => {});
+      .then((data) => setCategories(data.length > 0 ? data : FALLBACK_CATEGORIES))
+      .catch(() => setCategories(FALLBACK_CATEGORIES));
   }, []);
 
   const selected = categories.find((c) => c.id === values.categoryId) ?? null;
