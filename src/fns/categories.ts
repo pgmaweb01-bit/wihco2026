@@ -11,7 +11,6 @@ export const getCategoriesFn = createServerFn({ method: "GET" }).handler(async (
       description: true,
       price: true,
       currency: true,
-      period: true,
     },
   });
 });

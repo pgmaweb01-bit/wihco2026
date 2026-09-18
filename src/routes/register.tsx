@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { SiteFooter } from "@/components/site/site-footer";
-import { EVENT, REGISTRATION_PERIODS } from "@/data/conference";
+import { EVENT, getRegistrationPeriod, getPrice } from "@/data/conference";
 import { getCategoriesFn } from "@/fns/categories";
 import { createRegistrationFn } from "@/fns/registration";
 
@@ -34,7 +34,7 @@ const schema = z.object({
   jobTitle: z.string().trim().min(1, "Job title is required").max(150),
   city: z.string().trim().min(1, "City is required").max(100),
   country: z.string().trim().min(1, "Country is required").max(100),
-  categoryId: z.string().min(1, "Select a registration category"),
+  categoryId: z.string().min(1, "Select a registration type"),
 });
 
 type Fields = z.input<typeof schema>;
@@ -62,21 +62,7 @@ const FIELDS: { name: keyof Fields; label: string; type?: string; placeholder?: 
   { name: "country", label: "Country" },
 ];
 
-type Category = { id: string; name: string; description: string; price: number | null; currency: string; period: string };
-
-function getCurrentPeriod(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const earlyStart = new Date(year, 8, 21); // Sep 21
-  const earlyEnd = new Date(year, 9, 9, 23, 59, 59); // Oct 9
-  const lateStart = new Date(year, 9, 12); // Oct 12
-  const lateEnd = new Date(year, 9, 28, 23, 59, 59); // Oct 28
-
-  if (now >= earlyStart && now <= earlyEnd) return "early_bird";
-  if (now >= lateStart && now <= lateEnd) return "late";
-  if (now < earlyStart) return "early_bird"; // Before registration opens, show early bird
-  return "late"; // After late period, still show late (or could show closed)
-}
+type Category = { id: string; name: string; description: string; price: number | null; currency: string };
 
 function RegisterPage() {
   const [values, setValues] = useState<Fields>(EMPTY);
@@ -86,9 +72,7 @@ function RegisterPage() {
   const [step, setStep] = useState<"form" | "processing" | "redirect" | "error">("form");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const currentPeriod = getCurrentPeriod();
-  const activeCategories = categories.filter((c) => c.period === currentPeriod);
-  const periodInfo = REGISTRATION_PERIODS[currentPeriod as keyof typeof REGISTRATION_PERIODS];
+  const period = getRegistrationPeriod();
 
   useEffect(() => {
     getCategoriesFn()
@@ -97,6 +81,7 @@ function RegisterPage() {
   }, []);
 
   const selected = categories.find((c) => c.id === values.categoryId) ?? null;
+  const amount = selected ? getPrice(selected.id) : null;
 
   const set = (name: keyof Fields, value: string) => {
     setValues((v) => ({ ...v, [name]: value }));
@@ -223,7 +208,7 @@ function RegisterPage() {
                     <span className="font-body text-sm font-semibold text-foreground">Early Bird</span>
                     <span className="mt-0.5 block font-body text-xs text-muted-foreground">21 Sep – 9 Oct</span>
                   </td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-accent">₦70,000</td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦70,000</td>
                   <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦100,000</td>
                   <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦120,000</td>
                 </tr>
@@ -281,63 +266,80 @@ function RegisterPage() {
           <div className="mt-6 rounded-2xl border border-border bg-background/70 p-6 backdrop-blur-xl sm:p-8">
             <div className="flex items-center justify-between">
               <span className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
-                Registration category
+                Registration type
               </span>
               <span className="rounded-full bg-accent/10 px-3 py-1 font-body text-xs font-bold text-accent">
-                {periodInfo?.label} — {periodInfo?.dates}
+                {period.label} — {period.dates}
               </span>
             </div>
             <div className="mt-6 grid gap-3">
-              {activeCategories.map((c) => (
-                <label
-                  key={c.id}
-                  className={`flex cursor-pointer items-start gap-4 rounded-xl border p-5 transition-all ${
-                    values.categoryId === c.id
-                      ? "border-accent/50 bg-accent/10"
-                      : "border-border hover:border-accent/30"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="categoryId"
-                    value={c.id}
-                    checked={values.categoryId === c.id}
-                    onChange={(e) => set("categoryId", e.target.value)}
-                    className="mt-1 size-4 accent-[var(--accent)]"
-                  />
-                  <span className="flex-1">
-                    <span className="block font-body text-base font-semibold uppercase tracking-wide">
-                      {c.name}
+              {categories.map((c) => {
+                const cPrice = getPrice(c.id);
+                return (
+                  <label
+                    key={c.id}
+                    className={`flex cursor-pointer items-start gap-4 rounded-xl border p-5 transition-all ${
+                      values.categoryId === c.id
+                        ? "border-accent/50 bg-accent/10"
+                        : "border-border hover:border-accent/30"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="categoryId"
+                      value={c.id}
+                      checked={values.categoryId === c.id}
+                      onChange={(e) => set("categoryId", e.target.value)}
+                      className="mt-1 size-4 accent-[var(--accent)]"
+                    />
+                    <span className="flex-1">
+                      <span className="block font-body text-base font-semibold uppercase tracking-wide">
+                        {c.name}
+                      </span>
+                      <span className="mt-1 block font-body text-sm text-muted-foreground">
+                        {c.description}
+                      </span>
                     </span>
-                    <span className="mt-1 block font-body text-sm text-muted-foreground">
-                      {c.description}
+                    <span className="font-body text-sm font-bold whitespace-nowrap text-foreground">
+                      {cPrice !== null ? `₦${cPrice.toLocaleString()}` : "TBC"}
                     </span>
-                  </span>
-                  <span className="font-body text-sm font-bold whitespace-nowrap text-foreground">
-                    {c.price === null || c.price === undefined ? "Price TBC" : c.price === 0 ? "Free" : `₦${c.price.toLocaleString()}`}
-                  </span>
-                </label>
-              ))}
+                  </label>
+                );
+              })}
             </div>
             {errors.categoryId && (
               <p className="mt-3 font-body text-xs text-destructive">{errors.categoryId}</p>
             )}
-
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
-              <span className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                Amount due
-              </span>
-              <span className="font-display text-3xl font-extrabold tracking-tight">
-                {selected
-                  ? selected.price === null || selected.price === undefined
-                    ? "TBC"
-                    : selected.price === 0
-                      ? "Free"
-                      : `₦${selected.price.toLocaleString()}`
-                  : "—"}
-              </span>
-            </div>
           </div>
+
+          {/* Payment Summary */}
+          {selected && amount !== null && (
+            <div className="mt-6 rounded-2xl border border-accent/30 bg-accent/5 p-6 backdrop-blur-xl sm:p-8">
+              <span className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
+                Conference Registration Summary
+              </span>
+              <div className="mt-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="font-body text-sm text-muted-foreground">Registration Type</span>
+                  <span className="font-body text-sm font-semibold text-foreground">{selected.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-body text-sm text-muted-foreground">Registration Period</span>
+                  <span className="font-body text-sm font-semibold text-foreground">{period.label}</span>
+                </div>
+                <div className="border-t border-border pt-2">
+                  <div className="flex justify-between">
+                    <span className="font-body text-sm font-semibold text-foreground">
+                      {selected.id === "join-attend" ? "Membership + Conference Fee" : "Conference Fee"}
+                    </span>
+                    <span className="font-display text-2xl font-extrabold tracking-tight text-foreground">
+                      ₦{amount.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {step === "error" && errorMessage && (
             <div className="mt-6 rounded-2xl border border-destructive/40 bg-destructive/10 p-6">
@@ -347,10 +349,10 @@ function RegisterPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !selected || amount === null}
             className="mt-8 w-full rounded-lg bg-accent px-8 py-4 font-body text-sm font-bold uppercase tracking-[0.14em] text-accent-foreground transition-all hover:bg-accent/90 hover:shadow-xl hover:shadow-accent/25 disabled:opacity-50"
           >
-            {loading ? "Processing..." : "Continue to payment"}
+            {loading ? "Processing..." : amount !== null ? `Pay ₦${amount.toLocaleString()}` : "Select a registration type"}
           </button>
           <p className="mt-4 font-body text-xs text-muted-foreground">
             Your place is confirmed only after payment has been verified. Your ticket and QR code are

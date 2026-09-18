@@ -7,6 +7,23 @@ import { createTicket } from "@/server/services/ticket";
 import { sendConfirmationEmail } from "@/server/lib/email";
 import { randomBytes } from "crypto";
 
+const REGISTRATION_PRICING: Record<string, { early_bird: number; late: number }> = {
+  member: { early_bird: 70000, late: 100000 },
+  "non-member": { early_bird: 100000, late: 130000 },
+  "join-attend": { early_bird: 120000, late: 150000 },
+};
+
+function getServerPrice(categoryId: string): number {
+  const now = new Date();
+  const year = now.getFullYear();
+  const earlyStart = new Date(year, 8, 21);
+  const earlyEnd = new Date(year, 9, 9, 23, 59, 59);
+  const period = now >= earlyStart && now <= earlyEnd ? "early_bird" : "late";
+  const pricing = REGISTRATION_PRICING[categoryId];
+  if (!pricing) throw new Error("Invalid registration category");
+  return pricing[period];
+}
+
 const registrationSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
@@ -39,6 +56,8 @@ export const createRegistrationFn = createServerFn({
     if (existingAttendee && existingAttendee.paymentStatus === "PAID") {
       throw new Error("A paid registration already exists for this email");
     }
+
+    const amount = getServerPrice(data.categoryId);
 
     const attendee = await prisma.attendee.upsert({
       where: { email: data.email },
@@ -74,56 +93,25 @@ export const createRegistrationFn = createServerFn({
       where: { id: attendee.id },
       data: {
         paymentReference,
-        paymentAmount: category.price,
+        paymentAmount: amount,
         paymentCurrency: category.currency,
       },
     });
 
-    let authorizationUrl: string | null = null;
-
-    if (category.price && category.price > 0) {
-      const paystackResponse = await initializePaystackTransaction({
-        amount: category.price,
-        email: data.email,
-        reference: paymentReference,
-        metadata: {
-          attendeeId: attendee.id,
-          categoryId: data.categoryId,
-        },
-      });
-
-      authorizationUrl = paystackResponse.data.authorization_url;
-    } else {
-      // Free registration — issue ticket and send email immediately
-      await prisma.attendee.update({
-        where: { id: attendee.id },
-        data: { paymentStatus: "PAID" },
-      });
-
-      const uniqueAttendeeId = await generateAttendeeId(attendee.id);
-      await createTicket({ attendeeId: attendee.id, attendeeUniqueId: uniqueAttendeeId });
-
-      const ticket = await prisma.ticket.findUnique({ where: { attendeeId: attendee.id } });
-      const ticketUrl = `${process.env.APP_URL}/ticket/${ticket?.qrToken}`;
-
-      try {
-        await sendConfirmationEmail({
-          to: attendee.email,
-          attendeeName: `${attendee.firstName} ${attendee.lastName}`,
-          attendeeId: uniqueAttendeeId,
-          category: category.name,
-          ticketUrl,
-        });
-        console.log(`Email sent to ${attendee.email}`);
-      } catch (emailErr) {
-        console.error("Failed to send confirmation email:", emailErr);
-      }
-    }
+    const paystackResponse = await initializePaystackTransaction({
+      amount,
+      email: data.email,
+      reference: paymentReference,
+      metadata: {
+        attendeeId: attendee.id,
+        categoryId: data.categoryId,
+      },
+    });
 
     return {
       success: true,
       attendeeId: attendee.id,
       paymentReference,
-      authorizationUrl,
+      authorizationUrl: paystackResponse.data.authorization_url,
     };
   });

@@ -20,60 +20,29 @@ async function main() {
   console.log("✓ Admin user created (admin@wihcn.org)");
 
   // ─── Registration Categories ─────────────────────────
-  // 3 categories × 2 periods. Frontend filters by current date.
   const categories = [
     {
       id: "member",
       name: "Member",
       description: "WIHCN member.",
-      price: 70000,
+      price: null,
       currency: "NGN",
-      period: "early_bird",
       active: true,
     },
     {
       id: "non-member",
       name: "Non-Member",
       description: "Standard conference access.",
-      price: 100000,
+      price: null,
       currency: "NGN",
-      period: "early_bird",
       active: true,
     },
     {
       id: "join-attend",
       name: "Join + Attend",
       description: "Become a member and register in one step.",
-      price: 120000,
+      price: null,
       currency: "NGN",
-      period: "early_bird",
-      active: true,
-    },
-    {
-      id: "member-late",
-      name: "Member",
-      description: "WIHCN member.",
-      price: 100000,
-      currency: "NGN",
-      period: "late",
-      active: true,
-    },
-    {
-      id: "non-member-late",
-      name: "Non-Member",
-      description: "Standard conference access.",
-      price: 130000,
-      currency: "NGN",
-      period: "late",
-      active: true,
-    },
-    {
-      id: "join-attend-late",
-      name: "Join + Attend",
-      description: "Become a member and register in one step.",
-      price: 150000,
-      currency: "NGN",
-      period: "late",
       active: true,
     },
   ];

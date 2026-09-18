@@ -166,20 +166,33 @@ export type RegistrationCategory = {
   description: string;
   price: number | null;
   currency: string;
-  period: string;
   active: boolean;
 };
 
-export const REGISTRATION_PERIODS = {
-  early_bird: {
-    label: "Early Bird",
-    dates: "21 Sep – 9 Oct",
-  },
-  late: {
-    label: "Late Registration",
-    dates: "12 – 28 Oct",
-  },
-} as const;
+export const REGISTRATION_PRICING: Record<string, { early_bird: number; late: number }> = {
+  member: { early_bird: 70000, late: 100000 },
+  "non-member": { early_bird: 100000, late: 130000 },
+  "join-attend": { early_bird: 120000, late: 150000 },
+};
+
+export function getRegistrationPeriod(): { key: "early_bird" | "late"; label: string; dates: string } {
+  const now = new Date();
+  const year = now.getFullYear();
+  const earlyStart = new Date(year, 8, 21);
+  const earlyEnd = new Date(year, 9, 9, 23, 59, 59);
+
+  if (now >= earlyStart && now <= earlyEnd) {
+    return { key: "early_bird", label: "Early Bird", dates: "21 Sep – 9 Oct" };
+  }
+  return { key: "late", label: "Late Registration", dates: "12 – 28 Oct" };
+}
+
+export function getPrice(categoryId: string): number | null {
+  const period = getRegistrationPeriod();
+  const pricing = REGISTRATION_PRICING[categoryId];
+  if (!pricing) return null;
+  return pricing[period.key];
+}
 
 export const CATEGORIES: RegistrationCategory[] = [];
 
