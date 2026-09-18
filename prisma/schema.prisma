@@ -64,6 +64,7 @@ model RegistrationCategory {
   description String   @default("")
   price       Float?
   currency    String   @default("NGN")
+  period      String   @default("early_bird")
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

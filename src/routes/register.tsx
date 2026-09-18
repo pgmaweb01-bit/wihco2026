@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { SiteFooter } from "@/components/site/site-footer";
-import { EVENT } from "@/data/conference";
+import { EVENT, REGISTRATION_PERIODS } from "@/data/conference";
 import { getCategoriesFn } from "@/fns/categories";
 import { createRegistrationFn } from "@/fns/registration";
 
@@ -62,7 +62,21 @@ const FIELDS: { name: keyof Fields; label: string; type?: string; placeholder?: 
   { name: "country", label: "Country" },
 ];
 
-type Category = { id: string; name: string; description: string; price: number | null; currency: string };
+type Category = { id: string; name: string; description: string; price: number | null; currency: string; period: string };
+
+function getCurrentPeriod(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const earlyStart = new Date(year, 8, 21); // Sep 21
+  const earlyEnd = new Date(year, 9, 9, 23, 59, 59); // Oct 9
+  const lateStart = new Date(year, 9, 12); // Oct 12
+  const lateEnd = new Date(year, 9, 28, 23, 59, 59); // Oct 28
+
+  if (now >= earlyStart && now <= earlyEnd) return "early_bird";
+  if (now >= lateStart && now <= lateEnd) return "late";
+  if (now < earlyStart) return "early_bird"; // Before registration opens, show early bird
+  return "late"; // After late period, still show late (or could show closed)
+}
 
 function RegisterPage() {
   const [values, setValues] = useState<Fields>(EMPTY);
@@ -71,6 +85,10 @@ function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"form" | "processing" | "redirect" | "error">("form");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const currentPeriod = getCurrentPeriod();
+  const activeCategories = categories.filter((c) => c.period === currentPeriod);
+  const periodInfo = REGISTRATION_PERIODS[currentPeriod as keyof typeof REGISTRATION_PERIODS];
 
   useEffect(() => {
     getCategoriesFn()
@@ -184,6 +202,50 @@ function RegisterPage() {
           {EVENT.theme} — {EVENT.subtitle}. {EVENT.dateLong}, {EVENT.venue}, {EVENT.city}.
         </p>
 
+        {/* Pricing Table */}
+        <div className="mt-8 overflow-hidden rounded-2xl border border-border">
+          <div className="bg-primary px-6 py-4">
+            <h2 className="font-display text-lg font-bold text-white">Registration Fees</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">Period</th>
+                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">Member</th>
+                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">Non-Member</th>
+                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">Join + Attend</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-border">
+                  <td className="px-4 py-3">
+                    <span className="font-body text-sm font-semibold text-foreground">Early Bird</span>
+                    <span className="mt-0.5 block font-body text-xs text-muted-foreground">21 Sep – 9 Oct</span>
+                  </td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-accent">₦70,000</td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦100,000</td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦120,000</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3">
+                    <span className="font-body text-sm font-semibold text-foreground">Late</span>
+                    <span className="mt-0.5 block font-body text-xs text-muted-foreground">12 – 28 Oct</span>
+                  </td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦100,000</td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦130,000</td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦150,000</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="border-t border-border bg-muted/30 px-6 py-3">
+            <p className="font-body text-xs text-muted-foreground">
+              <strong>Join + Attend</strong> = Membership fee + conference registration fee.
+            </p>
+          </div>
+        </div>
+
         <form onSubmit={onSubmit} noValidate className="mt-10">
           <div className="rounded-2xl border border-border bg-background/70 p-6 backdrop-blur-xl sm:p-8">
             <span className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
@@ -217,11 +279,16 @@ function RegisterPage() {
           </div>
 
           <div className="mt-6 rounded-2xl border border-border bg-background/70 p-6 backdrop-blur-xl sm:p-8">
-            <span className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
-              Registration category
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
+                Registration category
+              </span>
+              <span className="rounded-full bg-accent/10 px-3 py-1 font-body text-xs font-bold text-accent">
+                {periodInfo?.label} — {periodInfo?.dates}
+              </span>
+            </div>
             <div className="mt-6 grid gap-3">
-              {categories.map((c) => (
+              {activeCategories.map((c) => (
                 <label
                   key={c.id}
                   className={`flex cursor-pointer items-start gap-4 rounded-xl border p-5 transition-all ${

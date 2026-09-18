@@ -21,37 +21,69 @@ async function main() {
 
   // ─── Registration Categories ─────────────────────────
   const categories = [
+    // Early Bird: 21 Sep – 9 Oct
     {
-      name: "General",
-      description: "Standard conference access, including the after party.",
-      price: 50000,
+      id: "member-early",
+      name: "Member",
+      description: "WIHCN member — Early Bird pricing (21 Sep – 9 Oct).",
+      price: 70000,
       currency: "NGN",
+      period: "early_bird",
       active: true,
     },
     {
-      name: "Speaker",
-      description: "For confirmed conference speakers.",
-      price: 0,
+      id: "non-member-early",
+      name: "Non-Member",
+      description: "Standard conference access — Early Bird pricing (21 Sep – 9 Oct).",
+      price: 100000,
       currency: "NGN",
+      period: "early_bird",
       active: true,
     },
     {
-      name: "Panelist",
-      description: "For confirmed panel participants.",
-      price: 0,
+      id: "join-attend-early",
+      name: "Join + Attend",
+      description: "Become a member and register in one step — Early Bird pricing (21 Sep – 9 Oct).",
+      price: 120000,
       currency: "NGN",
+      period: "early_bird",
+      active: true,
+    },
+    // Late: 12 – 28 Oct
+    {
+      id: "member-late",
+      name: "Member",
+      description: "WIHCN member — Late registration (12 – 28 Oct).",
+      price: 100000,
+      currency: "NGN",
+      period: "late",
+      active: true,
+    },
+    {
+      id: "non-member-late",
+      name: "Non-Member",
+      description: "Standard conference access — Late registration (12 – 28 Oct).",
+      price: 130000,
+      currency: "NGN",
+      period: "late",
+      active: true,
+    },
+    {
+      id: "join-attend-late",
+      name: "Join + Attend",
+      description: "Become a member and register in one step — Late registration (12 – 28 Oct).",
+      price: 150000,
+      currency: "NGN",
+      period: "late",
       active: true,
     },
   ];
 
   for (const cat of categories) {
     await prisma.registrationCategory.upsert({
-      where: { id: cat.name.toLowerCase() },
+      where: { id: cat.id },
       update: {},
-      create: {
-        id: cat.name.toLowerCase(),
-        ...cat,
-      },
+      create: cat,
     });
   }
   console.log("✓ Registration categories created");

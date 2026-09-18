@@ -166,35 +166,22 @@ export type RegistrationCategory = {
   description: string;
   price: number | null;
   currency: string;
+  period: string;
   active: boolean;
 };
 
-export const CATEGORIES: RegistrationCategory[] = [
-  {
-    id: "general",
-    name: "General",
-    description: "Standard conference access, including the after party.",
-    price: null,
-    currency: "NGN",
-    active: true,
+export const REGISTRATION_PERIODS = {
+  early_bird: {
+    label: "Early Bird",
+    dates: "21 Sep – 9 Oct",
   },
-  {
-    id: "speaker",
-    name: "Speaker",
-    description: "For confirmed conference speakers.",
-    price: null,
-    currency: "NGN",
-    active: true,
+  late: {
+    label: "Late Registration",
+    dates: "12 – 28 Oct",
   },
-  {
-    id: "panelist",
-    name: "Panelist",
-    description: "For confirmed panel participants.",
-    price: null,
-    currency: "NGN",
-    active: true,
-  },
-];
+} as const;
+
+export const CATEGORIES: RegistrationCategory[] = [];
 
 export const NAV_LINKS = [
   { label: "Home", href: "#home" },
