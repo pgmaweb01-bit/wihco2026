@@ -23,9 +23,9 @@ export const EVENT = {
 } as const;
 
 export const CONTACT = {
-  email: "[email placeholder]",
-  phone: "[phone placeholder]",
-  website: "[website placeholder]",
+  email: "info@wihcn.org",
+  phone: "+234 916 984 3432",
+  website: "wihcn.org",
   socials: [
     { label: "Instagram", href: "#" },
     { label: "LinkedIn", href: "#" },
@@ -200,7 +200,6 @@ export const NAV_LINKS = [
   { label: "Home", href: "#home" },
   { label: "About", href: "#about" },
   { label: "Theme", href: "#theme" },
-  { label: "Speakers", href: "#speakers" },
   { label: "Programme", href: "#programme" },
   { label: "Venue", href: "#venue" },
   { label: "FAQ", href: "#faq" },
