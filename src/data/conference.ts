@@ -28,8 +28,8 @@ export const CONTACT = {
   website: "wihcn.org",
   socials: [
     { label: "Instagram", href: "https://www.instagram.com/womeninhealthcarenetwork/" },
-    { label: "LinkedIn", href: "https://www.linkedin.com/company/101134347/" },
-    { label: "X", href: "https://twitter.com/wihcnetwork" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/company/women-in-healthcare-network/" },
+    { label: "X", href: "https://x.com/wihcnetwork" },
     { label: "YouTube", href: "https://www.youtube.com/@WomenInHealthcareNetwork-WIHCN" },
   ],
 } as const;
