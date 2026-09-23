@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { getAdminAttendeesFn, deleteAdminAttendeeFn, verifyAdminAttendeePaymentFn } from "@/fns/admin-attendees";
+import { getAdminAttendeesFn, deleteAdminAttendeeFn, verifyAdminAttendeePaymentFn, markAdminAttendeePaidFn } from "@/fns/admin-attendees";
 import { exportAttendeesFn } from "@/fns/admin-export";
 import { resendTicketEmailFn } from "@/fns/resend-email";
 
@@ -130,6 +130,37 @@ function AdminAttendees() {
       }
     } catch {
       setToast({ message: "Payment verification failed.", type: "error" });
+    }
+    setActionLoading(null);
+    setTimeout(() => setToast(null), 5000);
+  };
+
+  const handleMarkPaid = async (attendeeId: string, name: string, defaultAmount: number) => {
+    const amountStr = window.prompt(
+      `Mark ${name} as PAID (manual payment).\n\nEnter the amount paid in Naira:`,
+      defaultAmount > 0 ? String(defaultAmount) : ""
+    );
+
+    if (amountStr === null) return;
+
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount <= 0) {
+      setToast({ message: "Invalid amount.", type: "error" });
+      return;
+    }
+
+    setActionLoading(attendeeId);
+    setToast(null);
+    try {
+      const res: any = await markAdminAttendeePaidFn({ data: { id: attendeeId, amount } });
+      if (res?.success) {
+        setToast({ message: res?.message || "Registration marked PAID.", type: "success" });
+        fetchAttendees(pagination.page, search);
+      } else {
+        setToast({ message: res?.error || "Failed to mark registration as paid.", type: "error" });
+      }
+    } catch {
+      setToast({ message: "Failed to mark registration as paid.", type: "error" });
     }
     setActionLoading(null);
     setTimeout(() => setToast(null), 5000);
@@ -289,6 +320,23 @@ function AdminAttendees() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-1.5">
+                      {a.paymentStatus === "PENDING" && (
+                        <button
+                          onClick={() => handleMarkPaid(a.id, `${a.firstName} ${a.lastName}`, a.paymentAmount ?? 0)}
+                          disabled={actionLoading === a.id}
+                          title="Manually mark as paid (bank transfer / cash) and issue ticket + email"
+                          className="rounded bg-secondary px-3 py-1.5 text-[10px] font-bold text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"
+                        >
+                          {actionLoading === a.id ? (
+                            <span className="flex items-center gap-1">
+                              <span className="size-3 animate-spin rounded-full border-2 border-secondary-foreground border-t-transparent" />
+                              Working...
+                            </span>
+                          ) : (
+                            "Mark Paid"
+                          )}
+                        </button>
+                      )}
                       {a.paymentStatus === "PENDING" && (
                         <button
                           onClick={() => handleVerify(a.id)}

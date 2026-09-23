@@ -1,6 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { prisma } from "@/server/lib/prisma";
-import { settlePaidRegistration } from "@/server/services/payment-settlement";
+import {
+  settlePaidRegistration,
+  completePaidRegistration,
+} from "@/server/services/payment-settlement";
+import { randomBytes } from "crypto";
 
 export const getAdminAttendeesFn = createServerFn({ method: "POST" })
   .validator((data: {
@@ -161,5 +165,47 @@ export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
     return {
       success: true,
       message: "Payment verified and ticket issued — confirmation email queued",
+    };
+  });
+
+export const markAdminAttendeePaidFn = createServerFn({ method: "POST" })
+  .validator((data: { id: string; amount?: number }) => data)
+  .handler(async ({ data }) => {
+    const attendee = await prisma.attendee.findUnique({
+      where: { id: data.id },
+      include: { category: true, payment: true },
+    });
+
+    if (!attendee) {
+      return { success: false, error: "Attendee not found" };
+    }
+
+    if (attendee.paymentStatus === "PAID") {
+      return { success: false, error: "Attendee is already marked as PAID" };
+    }
+
+    if (!attendee.category) {
+      return { success: false, error: "Attendee has an invalid category" };
+    }
+
+    const amount = data.amount ?? attendee.paymentAmount ?? 0;
+    if (amount <= 0) {
+      return { success: false, error: "Amount must be greater than zero" };
+    }
+
+    const manualReference =
+      attendee.paymentReference ??
+      `WIHCN26-MAN-${Date.now()}-${randomBytes(4).toString("hex")}`;
+
+    const result = await completePaidRegistration({
+      attendee,
+      reference: manualReference,
+      amount,
+      provider: "MANUAL",
+    });
+
+    return {
+      success: true,
+      message: `${result.attendeeUniqueId} marked PAID — ticket ${result.ticketReference} issued and confirmation email sent`,
     };
   });

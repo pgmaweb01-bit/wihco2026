@@ -3,13 +3,82 @@ import { verifyPaystackTransaction } from "../lib/paystack";
 import { generateAttendeeId } from "./attendee-id";
 import { createTicket } from "./ticket";
 import { sendConfirmationEmail } from "../lib/email";
-import type { Attendee, PaymentRecordStatus, RegistrationCategory } from "@prisma/client";
+import type { Attendee, PaymentProvider, PaymentRecordStatus, RegistrationCategory } from "@prisma/client";
 
 export type SettlePaidResult = {
   settled: boolean;
   attendeeId?: string;
   reason?: "already_settled" | "not_paid" | "attendee_not_found";
 };
+
+export type CompletePaidResult = {
+  completed: boolean;
+  attendeeId: string;
+  attendeeUniqueId: string;
+  ticketReference: string;
+  qrToken: string;
+};
+
+export async function completePaidRegistration(params: {
+  attendee: Attendee & { category: RegistrationCategory };
+  reference: string;
+  amount: number;
+  paidAt?: Date;
+  provider?: PaymentProvider;
+}): Promise<CompletePaidResult> {
+  const attendee = params.attendee;
+  const paidAt = params.paidAt ?? new Date();
+  const provider: PaymentProvider = params.provider ?? "PAYSTACK";
+
+  await prisma.payment.create({
+    data: {
+      reference: params.reference,
+      amount: params.amount,
+      status: "SUCCESS" as PaymentRecordStatus,
+      paidAt,
+      provider,
+      attendeeId: attendee.id,
+    },
+  });
+
+  const uniqueAttendeeId = await generateAttendeeId();
+  const ticket = await createTicket(attendee.id);
+
+  await prisma.attendee.update({
+    where: { id: attendee.id },
+    data: {
+      attendeeId: uniqueAttendeeId,
+      paymentStatus: "PAID",
+      paymentAmount: params.amount,
+      paymentReference: params.reference,
+      paidAt,
+      ticketReference: ticket.ticketReference,
+      ticketStatus: "ISSUED",
+    },
+  });
+
+  const ticketUrl = `${process.env.APP_URL}/ticket/${ticket.qrToken}`;
+
+  try {
+    await sendConfirmationEmail({
+      to: attendee.email,
+      attendeeName: `${attendee.firstName} ${attendee.lastName}`,
+      attendeeId: uniqueAttendeeId,
+      category: attendee.category.name,
+      ticketUrl,
+    });
+  } catch (err) {
+    console.error("Failed to send confirmation email:", err);
+  }
+
+  return {
+    completed: true,
+    attendeeId: attendee.id,
+    attendeeUniqueId: uniqueAttendeeId,
+    ticketReference: ticket.ticketReference,
+    qrToken: ticket.qrToken,
+  };
+}
 
 export async function settlePaidRegistration(params: {
   reference: string;
@@ -54,44 +123,13 @@ export async function settlePaidRegistration(params: {
   const amount = verification.data.amount / 100;
   const paidAt = new Date(verification.data.paid_at);
 
-  await prisma.payment.create({
-    data: {
-      reference: params.reference,
-      amount,
-      status: "SUCCESS" as PaymentRecordStatus,
-      paidAt,
-      attendeeId: attendee.id,
-    },
+  await completePaidRegistration({
+    attendee,
+    reference: params.reference,
+    amount,
+    paidAt,
+    provider: "PAYSTACK",
   });
-
-  const uniqueAttendeeId = await generateAttendeeId();
-  const ticket = await createTicket(attendee.id);
-
-  await prisma.attendee.update({
-    where: { id: attendee.id },
-    data: {
-      attendeeId: uniqueAttendeeId,
-      paymentStatus: "PAID",
-      paymentAmount: amount,
-      paidAt,
-      ticketReference: ticket.ticketReference,
-      ticketStatus: "ISSUED",
-    },
-  });
-
-  const ticketUrl = `${process.env.APP_URL}/ticket/${ticket.qrToken}`;
-
-  try {
-    await sendConfirmationEmail({
-      to: attendee.email,
-      attendeeName: `${attendee.firstName} ${attendee.lastName}`,
-      attendeeId: uniqueAttendeeId,
-      category: attendee.category.name,
-      ticketUrl,
-    });
-  } catch (err) {
-    console.error("Failed to send confirmation email:", err);
-  }
 
   return { settled: true, attendeeId: attendee.id };
 }
