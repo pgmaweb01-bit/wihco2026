@@ -6,9 +6,7 @@ import {
   verifyPaystackTransaction,
   validateWebhookSignature,
 } from "@/server/lib/paystack";
-import { generateAttendeeId } from "@/server/services/attendee-id";
-import { createTicket } from "@/server/services/ticket";
-import { sendConfirmationEmail } from "@/server/lib/email";
+import { settlePaidRegistration } from "@/server/services/payment-settlement";
 
 export const initializePaymentFn = createServerFn({
   method: "POST",
@@ -126,65 +124,15 @@ export const processWebhookFn = createServerFn({
     const event = JSON.parse(data.body);
 
     if (event.event === "charge.success") {
-      const { reference, amount, paid_at } = event.data;
+      const { reference } = event.data;
 
       const verificationResponse = await verifyPaystackTransaction(reference);
 
-      if (verificationResponse.status !== "success") {
+      if (verificationResponse.status !== true || verificationResponse.data.status !== "success") {
         throw new Error("Transaction verification failed");
       }
 
-      const existingPayment = await prisma.payment.findUnique({
-        where: { reference },
-      });
-
-      if (!existingPayment) {
-        const metadata = verificationResponse.metadata;
-        const attendeeId = metadata.attendeeId;
-
-        await prisma.payment.create({
-          data: {
-            reference,
-            amount: amount / 100,
-            status: "SUCCESS",
-            paidAt: new Date(paid_at),
-            attendeeId,
-          },
-        });
-
-        await prisma.attendee.update({
-          where: { id: attendeeId },
-          data: { paymentStatus: "PAID" },
-        });
-
-        const uniqueAttendeeId = await generateAttendeeId(attendeeId);
-
-        await createTicket({
-          attendeeId,
-          attendeeUniqueId: uniqueAttendeeId,
-        });
-
-        const attendee = await prisma.attendee.findUnique({
-          where: { id: attendeeId },
-          include: { category: true, ticket: true },
-        });
-
-        if (attendee) {
-          const ticketUrl = `${process.env.APP_URL}/ticket/${attendee.ticket?.qrToken}`;
-          try {
-            await sendConfirmationEmail({
-              to: attendee.email,
-              attendeeName: `${attendee.firstName} ${attendee.lastName}`,
-              attendeeId: uniqueAttendeeId,
-              category: attendee.category.name,
-              ticketUrl,
-            });
-            console.log(`Confirmation email sent to ${attendee.email}`);
-          } catch (emailErr) {
-            console.error("Failed to send confirmation email:", emailErr);
-          }
-        }
-      }
+      await settlePaidRegistration({ reference });
     }
 
     return { received: true };

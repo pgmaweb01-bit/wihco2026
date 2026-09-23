@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { prisma } from "@/server/lib/prisma";
+import { settlePaidRegistration } from "@/server/services/payment-settlement";
 
 export const getAdminAttendeesFn = createServerFn({ method: "POST" })
   .validator((data: {
@@ -86,4 +87,79 @@ export const updateAdminAttendeeFn = createServerFn({ method: "POST" })
     });
 
     return attendee;
+  });
+
+export const deleteAdminAttendeeFn = createServerFn({ method: "POST" })
+  .validator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    const attendee = await prisma.attendee.findUnique({
+      where: { id: data.id },
+      select: { attendeeId: true, email: true },
+    });
+
+    if (!attendee) {
+      return { success: false, error: "Attendee not found" };
+    }
+
+    await prisma.attendee.delete({ where: { id: data.id } });
+
+    return {
+      success: true,
+      message: `Registration ${attendee.attendeeId ?? attendee.email} deleted`,
+    };
+  });
+
+export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
+  .validator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    const attendee = await prisma.attendee.findUnique({
+      where: { id: data.id },
+      select: {
+        id: true,
+        attendeeId: true,
+        email: true,
+        paymentStatus: true,
+      },
+    });
+
+    if (!attendee) {
+      return { success: false, error: "Attendee not found" };
+    }
+
+    if (attendee.paymentStatus === "PAID") {
+      return { success: false, error: "Attendee is already marked as PAID" };
+    }
+
+    const pendingAttendee = await prisma.attendee.findUnique({
+      where: { id: data.id },
+      select: {
+        id: true,
+        paymentReference: true,
+        ticketStatus: true,
+      },
+    });
+
+    if (!pendingAttendee?.paymentReference) {
+      return {
+        success: false,
+        error: "No payment reference — the Paystack transaction was never initialized for this registration",
+      };
+    }
+
+    const result = await settlePaidRegistration({
+      reference: pendingAttendee.paymentReference,
+    });
+
+    if (!result.settled) {
+      const message =
+        result.reason === "not_paid"
+          ? "Paystack reports this transaction has not been paid"
+          : "Could not match this registration to a Paystack transaction";
+      return { success: false, error: message };
+    }
+
+    return {
+      success: true,
+      message: "Payment verified and ticket issued — confirmation email queued",
+    };
   });

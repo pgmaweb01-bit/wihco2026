@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { getAdminAttendeesFn } from "@/fns/admin-attendees";
+import { getAdminAttendeesFn, deleteAdminAttendeeFn, verifyAdminAttendeePaymentFn } from "@/fns/admin-attendees";
 import { exportAttendeesFn } from "@/fns/admin-export";
 import { resendTicketEmailFn } from "@/fns/resend-email";
 
@@ -115,6 +115,49 @@ function AdminAttendees() {
     }
     setActionLoading(null);
     setTimeout(() => setToast(null), 4000);
+  };
+
+  const handleVerify = async (attendeeId: string) => {
+    setActionLoading(attendeeId);
+    setToast(null);
+    try {
+      const res: any = await verifyAdminAttendeePaymentFn({ data: { id: attendeeId } });
+      if (res?.success) {
+        setToast({ message: res?.message || "Payment verified!", type: "success" });
+        fetchAttendees(pagination.page, search);
+      } else {
+        setToast({ message: res?.error || "Payment could not be verified.", type: "error" });
+      }
+    } catch {
+      setToast({ message: "Payment verification failed.", type: "error" });
+    }
+    setActionLoading(null);
+    setTimeout(() => setToast(null), 5000);
+  };
+
+  const handleDelete = async (attendeeId: string, name: string) => {
+    const confirmed = window.confirm(
+      `Delete the registration for ${name}?\nThis permanently removes the attendee, payment, ticket and check-in record. This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setActionLoading(attendeeId);
+    setToast(null);
+    try {
+      const res: any = await deleteAdminAttendeeFn({ data: { id: attendeeId } });
+      if (res?.success) {
+        setToast({ message: res?.message || "Registration deleted.", type: "success" });
+        const newTotal = pagination.total - 1;
+        const lastPage = Math.max(1, Math.ceil(newTotal / pagination.limit));
+        fetchAttendees(Math.min(pagination.page, lastPage), search);
+      } else {
+        setToast({ message: res?.error || "Failed to delete registration.", type: "error" });
+      }
+    } catch {
+      setToast({ message: "Failed to delete registration.", type: "error" });
+    }
+    setActionLoading(null);
+    setTimeout(() => setToast(null), 5000);
   };
 
   const handleExport = async () => {
@@ -245,24 +288,50 @@ function AdminAttendees() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    {a.ticketReference ? (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {a.paymentStatus === "PENDING" && (
+                        <button
+                          onClick={() => handleVerify(a.id)}
+                          disabled={actionLoading === a.id}
+                          title="Requery Paystack to verify this pending payment"
+                          className="rounded bg-accent px-3 py-1.5 text-[10px] font-bold text-accent-foreground hover:bg-accent/90 disabled:opacity-50"
+                        >
+                          {actionLoading === a.id ? (
+                            <span className="flex items-center gap-1">
+                              <span className="size-3 animate-spin rounded-full border-2 border-accent-foreground border-t-transparent" />
+                              Verifying...
+                            </span>
+                          ) : (
+                            "Verify Payment"
+                          )}
+                        </button>
+                      )}
+                      {a.ticketReference ? (
+                        <button
+                          onClick={() => handleResend(a.id)}
+                          disabled={actionLoading === a.id}
+                          className="rounded bg-[#082266] px-3 py-1.5 text-[10px] font-bold text-white hover:bg-[#082266]/90 disabled:opacity-50"
+                        >
+                          {actionLoading === a.id ? (
+                            <span className="flex items-center gap-1">
+                              <span className="size-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                              Sending...
+                            </span>
+                          ) : (
+                            "Resend Email"
+                          )}
+                        </button>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">No ticket</span>
+                      )}
                       <button
-                        onClick={() => handleResend(a.id)}
+                        onClick={() => handleDelete(a.id, `${a.firstName} ${a.lastName}`)}
                         disabled={actionLoading === a.id}
-                        className="rounded bg-[#082266] px-3 py-1.5 text-[10px] font-bold text-white hover:bg-[#082266]/90 disabled:opacity-50"
+                        className="rounded bg-destructive px-3 py-1.5 text-[10px] font-bold text-white hover:bg-destructive/90 disabled:opacity-50"
                       >
-                        {actionLoading === a.id ? (
-                          <span className="flex items-center gap-1">
-                            <span className="size-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                            Sending...
-                          </span>
-                        ) : (
-                          "Resend Email"
-                        )}
+                        {actionLoading === a.id ? "Working..." : "Delete"}
                       </button>
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground">No ticket</span>
-                    )}
+                    </div>
                   </td>
                 </tr>
               ))
