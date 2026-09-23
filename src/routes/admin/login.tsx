@@ -24,7 +24,7 @@ function AdminLoginPage() {
     setError("");
 
     try {
-      const result = await adminLoginFn({ email, password });
+      const result = await adminLoginFn({ data: { email, password } });
 
       if (!result.success) {
         setError("Login failed");
