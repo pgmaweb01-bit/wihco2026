@@ -60,47 +60,75 @@ export const verifyPaymentFn = createServerFn({
       .parse(data),
   )
   .handler(async ({ data }) => {
-    const payment = await prisma.payment.findUnique({
-      where: { reference: data.reference },
-    });
-
-    if (!payment) {
-      const attendee = await prisma.attendee.findUnique({
-        where: { paymentReference: data.reference },
-        select: { id: true, paymentStatus: true, ticketStatus: true },
+    let helper = async () => {
+      const payment = await prisma.payment.findUnique({
+        where: { reference: data.reference },
       });
 
-      if (attendee) {
+      if (!payment) {
+        const attendee = await prisma.attendee.findUnique({
+          where: { paymentReference: data.reference },
+          select: { id: true, paymentStatus: true, ticketStatus: true },
+        });
+
+        if (attendee) {
+          return {
+            status: attendee.paymentStatus,
+            attendeeId: attendee.id,
+            paymentStatus: attendee.paymentStatus,
+            ticketStatus: attendee.ticketStatus,
+            hasTicket: attendee.ticketStatus === "ISSUED",
+          };
+        }
+
         return {
-          status: attendee.paymentStatus,
-          attendeeId: attendee.id,
-          paymentStatus: attendee.paymentStatus,
-          ticketStatus: attendee.ticketStatus,
-          hasTicket: attendee.ticketStatus === "ISSUED",
+          status: "not_found",
+          reference: data.reference,
+          paymentStatus: "PENDING",
+          ticketStatus: "PENDING",
+          hasTicket: false,
         };
       }
 
+      const attendee = await prisma.attendee.findUnique({
+        where: { id: payment.attendeeId },
+        select: { id: true, paymentStatus: true, ticketStatus: true },
+      });
+
       return {
-        status: "not_found",
-        reference: data.reference,
-        paymentStatus: "PENDING",
-        ticketStatus: "PENDING",
-        hasTicket: false,
+        status: payment.status,
+        attendeeId: attendee?.id,
+        paymentStatus: attendee?.paymentStatus ?? "PENDING",
+        ticketStatus: attendee?.ticketStatus ?? "PENDING",
+        hasTicket: attendee?.ticketStatus === "ISSUED",
       };
+    };
+
+    const initial = await helper();
+
+    if (initial.paymentStatus !== "PAID") {
+      try {
+        const verification = await verifyPaystackTransaction(data.reference);
+
+        if (
+          verification.status === true &&
+          verification.data.status === "success"
+        ) {
+          const email = verification.data.customer?.email;
+          await settlePaidRegistration({
+            reference: data.reference,
+            ...(email ? { email } : {}),
+          });
+
+          const after = await helper();
+          return after.paymentStatus !== "PENDING" ? after : initial;
+        }
+      } catch (err) {
+        console.error("Verify payment requery failed:", err);
+      }
     }
 
-    const attendee = await prisma.attendee.findUnique({
-      where: { id: payment.attendeeId },
-      select: { id: true, paymentStatus: true, ticketStatus: true },
-    });
-
-    return {
-      status: payment.status,
-      attendeeId: attendee?.id,
-      paymentStatus: attendee?.paymentStatus ?? "PENDING",
-      ticketStatus: attendee?.ticketStatus ?? "PENDING",
-      hasTicket: attendee?.ticketStatus === "ISSUED",
-    };
+    return initial;
   });
 
 export const processWebhookFn = createServerFn({
@@ -125,6 +153,7 @@ export const processWebhookFn = createServerFn({
 
     if (event.event === "charge.success") {
       const { reference } = event.data;
+      const email = event.data.customer?.email as string | undefined;
 
       const verificationResponse = await verifyPaystackTransaction(reference);
 
@@ -132,7 +161,7 @@ export const processWebhookFn = createServerFn({
         throw new Error("Transaction verification failed");
       }
 
-      await settlePaidRegistration({ reference });
+      await settlePaidRegistration({ reference, ...(email ? { email } : {}) });
     }
 
     return { received: true };

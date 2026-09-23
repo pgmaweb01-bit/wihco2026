@@ -158,7 +158,9 @@ export const FAQS: Faq[] = [
 ];
 
 /**
- * Placeholder only — categories and prices will be loaded from the database.
+ * Registration categories and prices — aligned with the Paystack Payment Page
+ * (https://paystack.shop/pay/wihcniii2026). Each category is a fixed-price
+ * tier; early-bird and late prices are already split per tier on the page.
  */
 export type RegistrationCategory = {
   id: string;
@@ -169,32 +171,30 @@ export type RegistrationCategory = {
   active: boolean;
 };
 
-export const REGISTRATION_PRICING: Record<string, { early_bird: number; late: number }> = {
-  member: { early_bird: 70000, late: 100000 },
-  "non-member": { early_bird: 100000, late: 130000 },
-  "join-attend": { early_bird: 120000, late: 150000 },
+export const REGISTRATION_PRICING: Record<string, number> = {
+  virtual: 35000,
+  "member-early": 50000,
+  "member-late": 60000,
+  "nonmember-early": 70000,
+  "nonmember-late": 80000,
+  "membership-early": 80000,
+  "membership-late": 90000,
 };
 
-export function getRegistrationPeriod(): { key: "early_bird" | "late"; label: string; dates: string } {
-  const now = new Date();
-  const year = now.getFullYear();
-  const earlyStart = new Date(year, 8, 21);
-  const earlyEnd = new Date(year, 9, 9, 23, 59, 59);
-
-  if (now >= earlyStart && now <= earlyEnd) {
-    return { key: "early_bird", label: "Early Bird", dates: "21 Sep – 9 Oct" };
-  }
-  return { key: "late", label: "Late Registration", dates: "12 – 28 Oct" };
-}
-
 export function getPrice(categoryId: string): number | null {
-  const period = getRegistrationPeriod();
-  const pricing = REGISTRATION_PRICING[categoryId];
-  if (!pricing) return null;
-  return pricing[period.key];
+  const price = REGISTRATION_PRICING[categoryId];
+  return price ?? null;
 }
 
-export const CATEGORIES: RegistrationCategory[] = [];
+export const CATEGORIES: RegistrationCategory[] = [
+  { id: "virtual", name: "Virtual Access", description: "Attend the conference virtually.", price: 35000, currency: "NGN", active: true },
+  { id: "member-early", name: "Members Early Bird Registration", description: "WIHCN member — early bird rate.", price: 50000, currency: "NGN", active: true },
+  { id: "member-late", name: "Members Late Registration", description: "WIHCN member — late rate.", price: 60000, currency: "NGN", active: true },
+  { id: "nonmember-early", name: "Non-Members Early Bird Registration", description: "Non-member — early bird rate.", price: 70000, currency: "NGN", active: true },
+  { id: "nonmember-late", name: "Non-Members Late Registration", description: "Non-member — late rate.", price: 80000, currency: "NGN", active: true },
+  { id: "membership-early", name: "Membership + Early Bird Registration", description: "Become a member and register — early bird rate.", price: 80000, currency: "NGN", active: true },
+  { id: "membership-late", name: "Membership + Late Registration", description: "Become a member and register — late rate.", price: 90000, currency: "NGN", active: true },
+];
 
 export const NAV_LINKS = [
   { label: "Home", href: "#home" },

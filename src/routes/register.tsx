@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { SiteFooter } from "@/components/site/site-footer";
-import { EVENT, getRegistrationPeriod, getPrice } from "@/data/conference";
+import { EVENT, getPrice } from "@/data/conference";
 import { getCategoriesFn } from "@/fns/categories";
 import { createRegistrationFn } from "@/fns/registration";
 
@@ -72,12 +72,14 @@ function RegisterPage() {
   const [step, setStep] = useState<"form" | "processing" | "redirect" | "error">("form");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const period = getRegistrationPeriod();
-
   const FALLBACK_CATEGORIES: Category[] = [
-    { id: "member", name: "Member", description: "WIHCN member.", price: null, currency: "NGN" },
-    { id: "non-member", name: "Non-Member", description: "Standard conference access.", price: null, currency: "NGN" },
-    { id: "join-attend", name: "Join + Attend", description: "Become a member and register in one step.", price: null, currency: "NGN" },
+    { id: "virtual", name: "Virtual Access", description: "Attend the conference virtually.", price: 35000, currency: "NGN" },
+    { id: "member-early", name: "Members Early Bird Registration", description: "WIHCN member — early bird rate.", price: 50000, currency: "NGN" },
+    { id: "member-late", name: "Members Late Registration", description: "WIHCN member — late rate.", price: 60000, currency: "NGN" },
+    { id: "nonmember-early", name: "Non-Members Early Bird Registration", description: "Non-member — early bird rate.", price: 70000, currency: "NGN" },
+    { id: "nonmember-late", name: "Non-Members Late Registration", description: "Non-member — late rate.", price: 80000, currency: "NGN" },
+    { id: "membership-early", name: "Membership + Early Bird Registration", description: "Become a member and register — early bird rate.", price: 80000, currency: "NGN" },
+    { id: "membership-late", name: "Membership + Late Registration", description: "Become a member and register — late rate.", price: 90000, currency: "NGN" },
   ];
 
   useEffect(() => {
@@ -275,7 +277,7 @@ function RegisterPage() {
                 Registration type
               </span>
               <span className="rounded-full bg-accent/10 px-3 py-1 font-body text-xs font-bold text-accent">
-                {period.label} — {period.dates}
+                {EVENT.dateShort} — Harbour Point, Lagos
               </span>
             </div>
             <div className="mt-6 grid gap-3">
@@ -329,15 +331,9 @@ function RegisterPage() {
                   <span className="font-body text-sm text-muted-foreground">Registration Type</span>
                   <span className="font-body text-sm font-semibold text-foreground">{selected.name}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="font-body text-sm text-muted-foreground">Registration Period</span>
-                  <span className="font-body text-sm font-semibold text-foreground">{period.label}</span>
-                </div>
                 <div className="border-t border-border pt-2">
                   <div className="flex justify-between">
-                    <span className="font-body text-sm font-semibold text-foreground">
-                      {selected.id === "join-attend" ? "Membership + Conference Fee" : "Conference Fee"}
-                    </span>
+                    <span className="font-body text-sm font-semibold text-foreground">Conference Fee</span>
                     <span className="font-display text-2xl font-extrabold tracking-tight text-foreground">
                       ₦{amount.toLocaleString()}
                     </span>

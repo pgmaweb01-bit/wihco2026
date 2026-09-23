@@ -82,6 +82,7 @@ export async function completePaidRegistration(params: {
 
 export async function settlePaidRegistration(params: {
   reference: string;
+  email?: string;
 }): Promise<SettlePaidResult> {
   const existingPayment = await prisma.payment.findUnique({
     where: { reference: params.reference },
@@ -112,6 +113,15 @@ export async function settlePaidRegistration(params: {
   if (!attendee) {
     attendee = await prisma.attendee.findUnique({
       where: { paymentReference: params.reference },
+      include: { category: true },
+    });
+  }
+
+  // Static Payment Page transactions use Paystack's own generated reference,
+  // so fall back to matching the payer by email.
+  if (!attendee && params.email) {
+    attendee = await prisma.attendee.findFirst({
+      where: { email: { equals: params.email, mode: "insensitive" } },
       include: { category: true },
     });
   }

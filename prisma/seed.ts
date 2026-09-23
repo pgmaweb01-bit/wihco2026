@@ -21,38 +21,32 @@ async function main() {
 
   // ─── Registration Categories ─────────────────────────
   const categories = [
-    {
-      id: "member",
-      name: "Member",
-      description: "WIHCN member.",
-      price: null,
-      currency: "NGN",
-      active: true,
-    },
-    {
-      id: "non-member",
-      name: "Non-Member",
-      description: "Standard conference access.",
-      price: null,
-      currency: "NGN",
-      active: true,
-    },
-    {
-      id: "join-attend",
-      name: "Join + Attend",
-      description: "Become a member and register in one step.",
-      price: null,
-      currency: "NGN",
-      active: true,
-    },
+    { id: "virtual", name: "Virtual Access", description: "Attend the conference virtually.", price: 35000, currency: "NGN", active: true },
+    { id: "member-early", name: "Members Early Bird Registration", description: "WIHCN member — early bird rate.", price: 50000, currency: "NGN", active: true },
+    { id: "member-late", name: "Members Late Registration", description: "WIHCN member — late rate.", price: 60000, currency: "NGN", active: true },
+    { id: "nonmember-early", name: "Non-Members Early Bird Registration", description: "Non-member — early bird rate.", price: 70000, currency: "NGN", active: true },
+    { id: "nonmember-late", name: "Non-Members Late Registration", description: "Non-member — late rate.", price: 80000, currency: "NGN", active: true },
+    { id: "membership-early", name: "Membership + Early Bird Registration", description: "Become a member and register — early bird rate.", price: 80000, currency: "NGN", active: true },
+    { id: "membership-late", name: "Membership + Late Registration", description: "Become a member and register — late rate.", price: 90000, currency: "NGN", active: true },
   ];
 
   for (const cat of categories) {
     await prisma.registrationCategory.upsert({
       where: { id: cat.id },
-      update: {},
+      update: { name: cat.name, description: cat.description, price: cat.price, active: cat.active },
       create: cat,
     });
+  }
+
+  // Legacy tiers are replaced by the Paystack-page-aligned categories above.
+  for (const legacyId of ["member", "non-member", "join-attend"]) {
+    const legacy = await prisma.registrationCategory.findUnique({ where: { id: legacyId } });
+    if (legacy) {
+      await prisma.registrationCategory.update({
+        where: { id: legacyId },
+        data: { active: false },
+      });
+    }
   }
   console.log("✓ Registration categories created");
 

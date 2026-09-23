@@ -1,27 +1,40 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { prisma } from "@/server/lib/prisma";
-import { initializePaystackTransaction } from "@/server/lib/paystack";
 import { generateAttendeeId } from "@/server/services/attendee-id";
 import { createTicket } from "@/server/services/ticket";
 import { sendConfirmationEmail } from "@/server/lib/email";
 import { randomBytes } from "crypto";
 
-const REGISTRATION_PRICING: Record<string, { early_bird: number; late: number }> = {
-  member: { early_bird: 70000, late: 100000 },
-  "non-member": { early_bird: 100000, late: 130000 },
-  "join-attend": { early_bird: 120000, late: 150000 },
+const REGISTRATION_PRICING: Record<string, number> = {
+  virtual: 35000,
+  "member-early": 50000,
+  "member-late": 60000,
+  "nonmember-early": 70000,
+  "nonmember-late": 80000,
+  "membership-early": 80000,
+  "membership-late": 90000,
 };
 
+const PAYMENT_PAGE_URL = "https://paystack.shop/pay/wihcniii2026";
+
 function getServerPrice(categoryId: string): number {
-  const now = new Date();
-  const year = now.getFullYear();
-  const earlyStart = new Date(year, 8, 21);
-  const earlyEnd = new Date(year, 9, 9, 23, 59, 59);
-  const period = now >= earlyStart && now <= earlyEnd ? "early_bird" : "late";
-  const pricing = REGISTRATION_PRICING[categoryId];
-  if (!pricing) throw new Error("Invalid registration category");
-  return pricing[period];
+  const price = REGISTRATION_PRICING[categoryId];
+  if (!price) throw new Error("Invalid registration category");
+  return price;
+}
+
+function buildPaymentPageUrl(params: {
+  email: string;
+  firstName: string;
+  lastName: string;
+}): string {
+  const url = new URL(PAYMENT_PAGE_URL);
+  url.searchParams.set("email", params.email);
+  url.searchParams.set("first_name", params.firstName);
+  url.searchParams.set("last_name", params.lastName);
+  url.searchParams.set("read-only", "email,first_name,last_name");
+  return url.toString();
 }
 
 const registrationSchema = z.object({
@@ -98,20 +111,16 @@ export const createRegistrationFn = createServerFn({
       },
     });
 
-    const paystackResponse = await initializePaystackTransaction({
-      amount,
+    const authorizationUrl = buildPaymentPageUrl({
       email: data.email,
-      reference: paymentReference,
-      metadata: {
-        attendeeId: attendee.id,
-        categoryId: data.categoryId,
-      },
+      firstName: data.firstName,
+      lastName: data.lastName,
     });
 
     return {
       success: true,
       attendeeId: attendee.id,
       paymentReference,
-      authorizationUrl: paystackResponse.data.authorization_url,
+      authorizationUrl,
     };
   });
