@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import QRCode from "qrcode";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -12,9 +13,19 @@ export interface SendConfirmationParams {
   ticketUrl: string;
 }
 
+async function generateQrDataUrl(ticketUrl: string): Promise<string> {
+  return QRCode.toDataURL(ticketUrl, {
+    width: 300,
+    margin: 2,
+    color: { dark: "#082266", light: "#ffffff" },
+  });
+}
+
 export async function sendConfirmationEmail(
   params: SendConfirmationParams
 ): Promise<void> {
+  const qrCodeDataUrl = await generateQrDataUrl(params.ticketUrl);
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -32,6 +43,8 @@ export async function sendConfirmationEmail(
     .detail-row { padding: 12px 0; border-bottom: 1px solid #eee; }
     .detail-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
     .detail-value { font-size: 16px; color: #333; margin-top: 4px; font-weight: 600; }
+    .qr-box { text-align: center; margin: 20px 0; padding: 20px; border: 1px solid #eee; border-radius: 12px; background: #fdfdfd; }
+    .qr-box img { width: 220px; height: 220px; }
     .cta-btn { display: inline-block; background: #082266; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; letter-spacing: 1px; margin: 20px 0; }
     .footer { background: #f9f9f9; padding: 20px 30px; text-align: center; font-size: 12px; color: #888; }
   </style>
@@ -45,7 +58,7 @@ export async function sendConfirmationEmail(
     <div class="content">
       <h2>Registration Confirmed</h2>
       <p style="color: #555; line-height: 1.6;">Your registration for WIHCN CON III has been confirmed. Below are your details:</p>
-      
+
       <div class="detail-row">
         <div class="detail-label">Attendee Name</div>
         <div class="detail-value">${params.attendeeName}</div>
@@ -67,7 +80,11 @@ export async function sendConfirmationEmail(
         <div class="detail-value">Harbour Point, Lagos</div>
       </div>
 
-      <p style="color: #555; line-height: 1.6; margin-top: 20px;">Click the button below to view your ticket and QR code:</p>
+      <p style="color: #555; line-height: 1.6; margin-top: 20px;">Present this QR code at check-in to gain entry:</p>
+      <div class="qr-box">
+        <img src="${qrCodeDataUrl}" alt="Your unique entry QR code" />
+      </div>
+      <p style="color: #555; line-height: 1.6;">You can also view your ticket online:</p>
       <a href="${params.ticketUrl}" class="cta-btn">VIEW MY TICKET</a>
     </div>
     <div class="footer">
@@ -91,6 +108,8 @@ export async function sendConfirmationEmail(
 export async function sendResendTicketEmail(
   params: SendConfirmationParams
 ): Promise<void> {
+  const qrCodeDataUrl = await generateQrDataUrl(params.ticketUrl);
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -108,6 +127,8 @@ export async function sendResendTicketEmail(
     .detail-row { padding: 12px 0; border-bottom: 1px solid #eee; }
     .detail-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
     .detail-value { font-size: 16px; color: #333; margin-top: 4px; font-weight: 600; }
+    .qr-box { text-align: center; margin: 20px 0; padding: 20px; border: 1px solid #eee; border-radius: 12px; background: #fdfdfd; }
+    .qr-box img { width: 220px; height: 220px; }
     .cta-btn { display: inline-block; background: #082266; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 14px; letter-spacing: 1px; margin: 20px 0; }
     .footer { background: #f9f9f9; padding: 20px 30px; text-align: center; font-size: 12px; color: #888; }
   </style>
@@ -121,7 +142,7 @@ export async function sendResendTicketEmail(
     <div class="content">
       <h2>Your Ticket</h2>
       <p style="color: #555; line-height: 1.6;">Here is your ticket for WIHCN CON III:</p>
-      
+
       <div class="detail-row">
         <div class="detail-label">Attendee Name</div>
         <div class="detail-value">${params.attendeeName}</div>
@@ -135,6 +156,10 @@ export async function sendResendTicketEmail(
         <div class="detail-value">${params.category}</div>
       </div>
 
+      <p style="color: #555; line-height: 1.6; margin-top: 20px;">Present this QR code at check-in to gain entry:</p>
+      <div class="qr-box">
+        <img src="${qrCodeDataUrl}" alt="Your unique entry QR code" />
+      </div>
       <a href="${params.ticketUrl}" class="cta-btn">VIEW MY TICKET</a>
     </div>
     <div class="footer">
