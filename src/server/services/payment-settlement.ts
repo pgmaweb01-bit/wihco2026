@@ -58,6 +58,7 @@ export async function completePaidRegistration(params: {
   });
 
   const ticketUrl = `${process.env.APP_URL}/ticket/${ticket.qrToken}`;
+  const qrCodeUrl = `${process.env.APP_URL}/api/qr/${ticket.qrToken}`;
 
   try {
     await sendConfirmationEmail({
@@ -65,6 +66,7 @@ export async function completePaidRegistration(params: {
       attendeeName: `${attendee.firstName} ${attendee.lastName}`,
       attendeeId: uniqueAttendeeId,
       ticketUrl,
+      qrCodeUrl,
     });
   } catch (err) {
     console.error("Failed to send confirmation email:", err);

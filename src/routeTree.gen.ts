@@ -24,6 +24,7 @@ import { Route as AdminProgrammeRouteImport } from './routes/admin/programme'
 import { Route as AdminSpeakersRouteImport } from './routes/admin/speakers'
 import { Route as TicketTokenRouteImport } from './routes/ticket.$token'
 import { Route as ApiPaymentsWebhookRouteImport } from './routes/api/payments/webhook'
+import { Route as ApiQrTokenRouteImport } from './routes/api/qr.$token'
 import { Route as ApiAdminTicketsAttendeeIdResendRouteImport } from './routes/api/admin/tickets/$attendeeId/resend'
 
 const IndexRoute = IndexRouteImport.update({
@@ -101,6 +102,11 @@ const ApiPaymentsWebhookRoute = ApiPaymentsWebhookRouteImport.update({
   path: '/api/payments/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiQrTokenRoute = ApiQrTokenRouteImport.update({
+  id: '/api/qr/$token',
+  path: '/api/qr/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminTicketsAttendeeIdResendRoute =
   ApiAdminTicketsAttendeeIdResendRouteImport.update({
     id: '/api/admin/tickets/$attendeeId/resend',
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/ticket/$token': typeof TicketTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
+  '/api/qr/$token': typeof ApiQrTokenRoute
   '/api/admin/tickets/$attendeeId/resend': typeof ApiAdminTicketsAttendeeIdResendRoute
 }
 export interface FileRoutesByTo {
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/ticket/$token': typeof TicketTokenRoute
   '/admin': typeof AdminIndexRoute
   '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
+  '/api/qr/$token': typeof ApiQrTokenRoute
   '/api/admin/tickets/$attendeeId/resend': typeof ApiAdminTicketsAttendeeIdResendRoute
 }
 export interface FileRoutesById {
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/ticket/$token': typeof TicketTokenRoute
   '/admin/': typeof AdminIndexRoute
   '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
+  '/api/qr/$token': typeof ApiQrTokenRoute
   '/api/admin/tickets/$attendeeId/resend': typeof ApiAdminTicketsAttendeeIdResendRoute
 }
 export interface FileRouteTypes {
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/ticket/$token'
     | '/admin/'
     | '/api/payments/webhook'
+    | '/api/qr/$token'
     | '/api/admin/tickets/$attendeeId/resend'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/ticket/$token'
     | '/admin'
     | '/api/payments/webhook'
+    | '/api/qr/$token'
     | '/api/admin/tickets/$attendeeId/resend'
   id:
     | '__root__'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/ticket/$token'
     | '/admin/'
     | '/api/payments/webhook'
+    | '/api/qr/$token'
     | '/api/admin/tickets/$attendeeId/resend'
   fileRoutesById: FileRoutesById
 }
@@ -226,6 +238,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   TicketTokenRoute: typeof TicketTokenRoute
   ApiPaymentsWebhookRoute: typeof ApiPaymentsWebhookRoute
+  ApiQrTokenRoute: typeof ApiQrTokenRoute
   ApiAdminTicketsAttendeeIdResendRoute: typeof ApiAdminTicketsAttendeeIdResendRoute
 }
 
@@ -336,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/qr/$token': {
+      id: '/api/qr/$token'
+      path: '/api/qr/$token'
+      fullPath: '/api/qr/$token'
+      preLoaderRoute: typeof ApiQrTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/tickets/$attendeeId/resend': {
       id: '/api/admin/tickets/$attendeeId/resend'
       path: '/api/admin/tickets/$attendeeId/resend'
@@ -378,6 +398,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   TicketTokenRoute: TicketTokenRoute,
   ApiPaymentsWebhookRoute: ApiPaymentsWebhookRoute,
+  ApiQrTokenRoute: ApiQrTokenRoute,
   ApiAdminTicketsAttendeeIdResendRoute: ApiAdminTicketsAttendeeIdResendRoute,
 }
 export const routeTree = rootRouteImport

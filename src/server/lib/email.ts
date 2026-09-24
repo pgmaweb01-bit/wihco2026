@@ -1,5 +1,4 @@
 import { Resend } from "resend";
-import QRCode from "qrcode";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -10,20 +9,13 @@ export interface SendConfirmationParams {
   attendeeName: string;
   attendeeId: string;
   ticketUrl: string;
-}
-
-async function generateQrDataUrl(ticketUrl: string): Promise<string> {
-  return QRCode.toDataURL(ticketUrl, {
-    width: 300,
-    margin: 2,
-    color: { dark: "#082266", light: "#ffffff" },
-  });
+  qrCodeUrl: string;
 }
 
 export async function sendConfirmationEmail(
   params: SendConfirmationParams
 ): Promise<void> {
-  const qrCodeDataUrl = await generateQrDataUrl(params.ticketUrl);
+  const qrCodeUrl = params.qrCodeUrl;
 
   const html = `
 <!DOCTYPE html>
@@ -77,7 +69,7 @@ export async function sendConfirmationEmail(
 
       <p style="color: #555; line-height: 1.6; margin-top: 20px;">Present this QR code at check-in to gain entry:</p>
       <div class="qr-box">
-        <img src="${qrCodeDataUrl}" alt="Your unique entry QR code" />
+        <img src="${qrCodeUrl}" alt="Your unique entry QR code" />
       </div>
       <p style="color: #555; line-height: 1.6;">You can also view your ticket online:</p>
       <a href="${params.ticketUrl}" class="cta-btn">VIEW MY TICKET</a>
@@ -92,18 +84,38 @@ export async function sendConfirmationEmail(
 </body>
 </html>`;
 
+  const text = `WIHCN CON III — Beyond Leadership
+
+Dear ${params.attendeeName},
+
+Your registration for WIHCN CON III has been confirmed.
+
+Attendee Name: ${params.attendeeName}
+Attendee ID: ${params.attendeeId}
+Event Date: Friday, 30 October 2026
+Venue: Harbour Point, Lagos
+
+Your ticket and QR code are ready. View your ticket online:
+${params.ticketUrl}
+
+WIHCN CON III - Beyond Leadership
+Building Legacy & Advancing Innovation
+30 October 2026 - Harbour Point, Lagos
+#WIHCNCON3`;
+
   await resend.emails.send({
     from: FROM_EMAIL,
     to: params.to,
     subject: `Registration Confirmed — WIHCN CON III | ${params.attendeeId}`,
     html,
+    text,
   });
 }
 
 export async function sendResendTicketEmail(
   params: SendConfirmationParams
 ): Promise<void> {
-  const qrCodeDataUrl = await generateQrDataUrl(params.ticketUrl);
+  const qrCodeUrl = params.qrCodeUrl;
 
   const html = `
 <!DOCTYPE html>
@@ -149,7 +161,7 @@ export async function sendResendTicketEmail(
 
       <p style="color: #555; line-height: 1.6; margin-top: 20px;">Present this QR code at check-in to gain entry:</p>
       <div class="qr-box">
-        <img src="${qrCodeDataUrl}" alt="Your unique entry QR code" />
+        <img src="${qrCodeUrl}" alt="Your unique entry QR code" />
       </div>
       <a href="${params.ticketUrl}" class="cta-btn">VIEW MY TICKET</a>
     </div>
@@ -161,10 +173,29 @@ export async function sendResendTicketEmail(
 </body>
 </html>`;
 
+  const text = `WIHCN CON III — Beyond Leadership
+
+Dear ${params.attendeeName},
+
+Here is your ticket for WIHCN CON III.
+
+Attendee Name: ${params.attendeeName}
+Attendee ID: ${params.attendeeId}
+Event Date: Friday, 30 October 2026
+Venue: Harbour Point, Lagos
+
+Your ticket and QR code are ready. View your ticket online:
+${params.ticketUrl}
+
+WIHCN CON III - Beyond Leadership
+30 October 2026 - Harbour Point, Lagos
+#WIHCNCON3`;
+
   await resend.emails.send({
     from: FROM_EMAIL,
     to: params.to,
     subject: `Your Ticket — WIHCN CON III | ${params.attendeeId}`,
     html,
+    text,
   });
 }

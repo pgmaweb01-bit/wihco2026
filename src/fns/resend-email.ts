@@ -21,6 +21,7 @@ export const resendTicketEmailFn = createServerFn({ method: "POST" })
     }
 
     const ticketUrl = `${process.env.APP_URL}/ticket/${attendee.ticket.qrToken}`;
+    const qrCodeUrl = `${process.env.APP_URL}/api/qr/${attendee.ticket.qrToken}`;
 
     try {
       await sendResendTicketEmail({
@@ -28,6 +29,7 @@ export const resendTicketEmailFn = createServerFn({ method: "POST" })
         attendeeName: `${attendee.firstName} ${attendee.lastName}`,
         attendeeId: attendee.attendeeId ?? "",
         ticketUrl,
+        qrCodeUrl,
       });
       return { success: true };
     } catch (err) {
