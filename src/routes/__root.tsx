@@ -90,8 +90,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Building Legacy & Advancing Innovation. 30 October 2026, Harbour Point, Lagos. A more inclusive healthcare future is possible.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "/Logo.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@wihcnetwork" },
+      { name: "twitter:image", content: "/Logo.png" },
     ],
     links: [
       {
