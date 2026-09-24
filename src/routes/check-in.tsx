@@ -202,8 +202,8 @@ function CheckInPage() {
           <div
             className="badge-card"
             style={{
-              width: "4in",
-              height: "6in",
+              width: "210mm",
+              height: "297mm",
               fontFamily: "Montserrat, Arial, sans-serif",
               position: "relative",
               overflow: "hidden",
@@ -211,8 +211,8 @@ function CheckInPage() {
               color: "#1a1a1a",
               display: "flex",
               flexDirection: "column",
-              borderRadius: "12px",
-              border: "2px solid #e5e7eb",
+              borderRadius: "0",
+              border: "none",
               pageBreakInside: "avoid",
             }}
           >
