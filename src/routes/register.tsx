@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { SiteFooter } from "@/components/site/site-footer";
-import { EVENT, getPrice } from "@/data/conference";
+import { EVENT, getCurrentRegistrationWindow, getPrice, isCategoryInCurrentWindow } from "@/data/conference";
 import { getCategoriesFn } from "@/fns/categories";
 import { createRegistrationFn } from "@/fns/registration";
 
@@ -82,13 +82,28 @@ function RegisterPage() {
     { id: "membership-late", name: "Membership + Late Registration", description: "Become a member and register — late rate.", price: 90000, currency: "NGN" },
   ];
 
+  const EARLY_BIRD_SUB = "21 Sep – 9 Oct";
+  const LATE_SUB = "12 – 28 Oct";
+
+  const FEE_ROWS: { id: string; name: string; sub?: string }[] = [
+    { id: "virtual", name: "Virtual Access" },
+    { id: "member-early", name: "Members Early Bird Registration", sub: EARLY_BIRD_SUB },
+    { id: "member-late", name: "Members Late Registration", sub: LATE_SUB },
+    { id: "nonmember-early", name: "Non-Members Early Bird Registration", sub: EARLY_BIRD_SUB },
+    { id: "nonmember-late", name: "Non-Members Late Registration", sub: LATE_SUB },
+    { id: "membership-early", name: "Membership + Early Bird Registration", sub: EARLY_BIRD_SUB },
+    { id: "membership-late", name: "Membership + Late Registration", sub: LATE_SUB },
+  ];
+
   useEffect(() => {
     getCategoriesFn()
       .then((data) => setCategories(data.length > 0 ? data : FALLBACK_CATEGORIES))
       .catch(() => setCategories(FALLBACK_CATEGORIES));
   }, []);
 
-  const selected = categories.find((c) => c.id === values.categoryId) ?? null;
+  const period = getCurrentRegistrationWindow();
+  const visibleCategories = categories.filter((c) => isCategoryInCurrentWindow(c.id, period));
+  const selected = visibleCategories.find((c) => c.id === values.categoryId) ?? null;
   const amount = selected ? getPrice(selected.id) : null;
 
   const set = (name: keyof Fields, value: string) => {
@@ -209,54 +224,22 @@ function RegisterPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-border">
-                  <td className="px-4 py-3">
-                    <span className="font-body text-sm font-semibold text-foreground">Virtual Access</span>
-                  </td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦35,000</td>
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="px-4 py-3">
-                    <span className="font-body text-sm font-semibold text-foreground">Members Early Bird Registration</span>
-                    <span className="mt-0.5 block font-body text-xs text-muted-foreground">21 Sep – 9 Oct</span>
-                  </td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦50,000</td>
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="px-4 py-3">
-                    <span className="font-body text-sm font-semibold text-foreground">Members Late Registration</span>
-                    <span className="mt-0.5 block font-body text-xs text-muted-foreground">12 – 28 Oct</span>
-                  </td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦60,000</td>
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="px-4 py-3">
-                    <span className="font-body text-sm font-semibold text-foreground">Non-Members Early Bird Registration</span>
-                    <span className="mt-0.5 block font-body text-xs text-muted-foreground">21 Sep – 9 Oct</span>
-                  </td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦70,000</td>
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="px-4 py-3">
-                    <span className="font-body text-sm font-semibold text-foreground">Non-Members Late Registration</span>
-                    <span className="mt-0.5 block font-body text-xs text-muted-foreground">12 – 28 Oct</span>
-                  </td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦80,000</td>
-                </tr>
-                <tr className="border-b border-border">
-                  <td className="px-4 py-3">
-                    <span className="font-body text-sm font-semibold text-foreground">Membership + Early Bird Registration</span>
-                    <span className="mt-0.5 block font-body text-xs text-muted-foreground">21 Sep – 9 Oct</span>
-                  </td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦80,000</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-3">
-                    <span className="font-body text-sm font-semibold text-foreground">Membership + Late Registration</span>
-                    <span className="mt-0.5 block font-body text-xs text-muted-foreground">12 – 28 Oct</span>
-                  </td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦90,000</td>
-                </tr>
+                {FEE_ROWS.filter((r) => isCategoryInCurrentWindow(r.id, period)).map((row) => {
+                  const rowPrice = getPrice(row.id);
+                  return (
+                    <tr key={row.id} className="border-b border-border last:border-0">
+                      <td className="px-4 py-3">
+                        <span className="font-body text-sm font-semibold text-foreground">{row.name}</span>
+                        {row.sub && (
+                          <span className="mt-0.5 block font-body text-xs text-muted-foreground">{row.sub}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">
+                        {rowPrice !== null ? `₦${rowPrice.toLocaleString()}` : "TBC"}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -312,7 +295,7 @@ function RegisterPage() {
               </span>
             </div>
             <div className="mt-6 grid gap-3">
-              {categories.map((c) => {
+              {visibleCategories.map((c) => {
                 const cPrice = getPrice(c.id);
                 return (
                   <label

@@ -186,6 +186,21 @@ export function getPrice(categoryId: string): number | null {
   return price ?? null;
 }
 
+/**
+ * Early-bird / late pricing windows. The registration form only offers the
+ * categories for the current window; once the early-bird window ends the late
+ * tiers become available automatically.
+ */
+export const EARLY_BIRD_WINDOW_ENDS = new Date("2026-10-09T23:59:59.999+01:00");
+
+export function getCurrentRegistrationWindow(now: Date = new Date()): "early" | "late" {
+  return now <= EARLY_BIRD_WINDOW_ENDS ? "early" : "late";
+}
+
+export function isCategoryInCurrentWindow(categoryId: string, period: "early" | "late"): boolean {
+  return categoryId === "virtual" || categoryId.endsWith(period === "early" ? "-early" : "-late");
+}
+
 export const CATEGORIES: RegistrationCategory[] = [
   { id: "virtual", name: "Virtual Access", description: "Attend the conference virtually.", price: 35000, currency: "NGN", active: true },
   { id: "member-early", name: "Members Early Bird Registration", description: "WIHCN member — early bird rate.", price: 50000, currency: "NGN", active: true },
