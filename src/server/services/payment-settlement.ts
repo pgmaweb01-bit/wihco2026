@@ -64,7 +64,6 @@ export async function completePaidRegistration(params: {
       to: attendee.email,
       attendeeName: `${attendee.firstName} ${attendee.lastName}`,
       attendeeId: uniqueAttendeeId,
-      category: attendee.category.name,
       ticketUrl,
     });
   } catch (err) {

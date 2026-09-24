@@ -39,9 +39,6 @@ export const getTicketByTokenFn = createServerFn({ method: "POST" })
         organisation: ticket.attendee.organisation,
         jobTitle: ticket.attendee.jobTitle,
       },
-      category: {
-        name: ticket.attendee.category.name,
-      },
       event: {
         name: "WIHCN CON III",
         theme: "Beyond Leadership",

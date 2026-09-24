@@ -9,7 +9,6 @@ export interface SendConfirmationParams {
   to: string;
   attendeeName: string;
   attendeeId: string;
-  category: string;
   ticketUrl: string;
 }
 
@@ -66,10 +65,6 @@ export async function sendConfirmationEmail(
       <div class="detail-row">
         <div class="detail-label">Attendee ID</div>
         <div class="detail-value">${params.attendeeId}</div>
-      </div>
-      <div class="detail-row">
-        <div class="detail-label">Category</div>
-        <div class="detail-value">${params.category}</div>
       </div>
       <div class="detail-row">
         <div class="detail-label">Event Date</div>
@@ -150,10 +145,6 @@ export async function sendResendTicketEmail(
       <div class="detail-row">
         <div class="detail-label">Attendee ID</div>
         <div class="detail-value">${params.attendeeId}</div>
-      </div>
-      <div class="detail-row">
-        <div class="detail-label">Category</div>
-        <div class="detail-value">${params.category}</div>
       </div>
 
       <p style="color: #555; line-height: 1.6; margin-top: 20px;">Present this QR code at check-in to gain entry:</p>

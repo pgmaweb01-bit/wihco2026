@@ -27,7 +27,6 @@ export const resendTicketEmailFn = createServerFn({ method: "POST" })
         to: attendee.email,
         attendeeName: `${attendee.firstName} ${attendee.lastName}`,
         attendeeId: attendee.attendeeId ?? "",
-        category: attendee.category.name,
         ticketUrl,
       });
       return { success: true };

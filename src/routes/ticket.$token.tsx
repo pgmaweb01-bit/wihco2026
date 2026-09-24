@@ -24,7 +24,6 @@ type TicketData = {
     organisation: string;
     jobTitle: string;
   };
-  category: { name: string };
   event: {
     name: string;
     theme: string;
@@ -133,23 +132,13 @@ function TicketPage() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4 border-b border-border pb-3">
-                <div>
-                  <p className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                    Attendee ID
-                  </p>
-                  <p className="mt-1 font-body text-sm font-bold">
-                    {data.attendee.attendeeId}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
-                    Category
-                  </p>
-                  <p className="mt-1 font-body text-sm font-bold">
-                    {data.category.name}
-                  </p>
-                </div>
+              <div className="border-b border-border pb-3">
+                <p className="font-body text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                  Attendee ID
+                </p>
+                <p className="mt-1 font-body text-sm font-bold">
+                  {data.attendee.attendeeId}
+                </p>
               </div>
 
               <div className="text-center">
