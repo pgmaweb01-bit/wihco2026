@@ -204,37 +204,65 @@ function RegisterPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">Period</th>
-                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">Member</th>
-                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">Non-Member</th>
-                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">Join + Attend</th>
+                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</th>
+                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">Fee</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-b border-border">
                   <td className="px-4 py-3">
-                    <span className="font-body text-sm font-semibold text-foreground">Early Bird</span>
+                    <span className="font-body text-sm font-semibold text-foreground">Virtual Access</span>
+                  </td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦35,000</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="px-4 py-3">
+                    <span className="font-body text-sm font-semibold text-foreground">Members Early Bird Registration</span>
+                    <span className="mt-0.5 block font-body text-xs text-muted-foreground">21 Sep – 9 Oct</span>
+                  </td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦50,000</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="px-4 py-3">
+                    <span className="font-body text-sm font-semibold text-foreground">Members Late Registration</span>
+                    <span className="mt-0.5 block font-body text-xs text-muted-foreground">12 – 28 Oct</span>
+                  </td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦60,000</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="px-4 py-3">
+                    <span className="font-body text-sm font-semibold text-foreground">Non-Members Early Bird Registration</span>
                     <span className="mt-0.5 block font-body text-xs text-muted-foreground">21 Sep – 9 Oct</span>
                   </td>
                   <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦70,000</td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦100,000</td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦120,000</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="px-4 py-3">
+                    <span className="font-body text-sm font-semibold text-foreground">Non-Members Late Registration</span>
+                    <span className="mt-0.5 block font-body text-xs text-muted-foreground">12 – 28 Oct</span>
+                  </td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦80,000</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="px-4 py-3">
+                    <span className="font-body text-sm font-semibold text-foreground">Membership + Early Bird Registration</span>
+                    <span className="mt-0.5 block font-body text-xs text-muted-foreground">21 Sep – 9 Oct</span>
+                  </td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦80,000</td>
                 </tr>
                 <tr>
                   <td className="px-4 py-3">
-                    <span className="font-body text-sm font-semibold text-foreground">Late</span>
+                    <span className="font-body text-sm font-semibold text-foreground">Membership + Late Registration</span>
                     <span className="mt-0.5 block font-body text-xs text-muted-foreground">12 – 28 Oct</span>
                   </td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦100,000</td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦130,000</td>
-                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦150,000</td>
+                  <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">₦90,000</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <div className="border-t border-border bg-muted/30 px-6 py-3">
             <p className="font-body text-xs text-muted-foreground">
-              <strong>Join + Attend</strong> = Membership fee + conference registration fee.
+              <strong>Membership +</strong> = Membership fee + conference registration fee.
             </p>
           </div>
         </div>
