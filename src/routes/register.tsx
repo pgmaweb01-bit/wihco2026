@@ -264,6 +264,9 @@ function RegisterPage() {
             <p className="font-body text-xs text-muted-foreground">
               <strong>Membership +</strong> = Membership fee + conference registration fee.
             </p>
+            <p className="mt-1 font-body text-xs text-muted-foreground">
+              Third party merchant fees apply.
+            </p>
           </div>
         </div>
 
