@@ -30,9 +30,18 @@ export async function createTicket(attendeeId: string): Promise<{ ticketReferenc
   return { ticketReference: ticket.ticketReference, qrToken: ticket.qrToken };
 }
 
+export function getTicketToken(input: string): string {
+  const trimmed = input.trim();
+  const index = trimmed.indexOf("/ticket/");
+  if (index !== -1) {
+    return trimmed.slice(index + "/ticket/".length);
+  }
+  return trimmed;
+}
+
 export async function getTicketByToken(qrToken: string) {
   return prisma.ticket.findUnique({
-    where: { qrToken },
+    where: { qrToken: getTicketToken(qrToken) },
     include: {
       attendee: {
         include: {

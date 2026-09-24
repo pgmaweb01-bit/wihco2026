@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import { getTicketToken } from "./ticket";
 
 export interface CheckInResult {
   success: boolean;
@@ -23,7 +24,7 @@ export async function processCheckIn(
   device?: string
 ): Promise<CheckInResult> {
   const ticket = await prisma.ticket.findUnique({
-    where: { qrToken },
+    where: { qrToken: getTicketToken(qrToken) },
     include: {
       attendee: {
         include: { category: true },
