@@ -249,7 +249,6 @@ function Home() {
           <div>
             <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">Venue</span>
             <h2 className="mt-4 font-display text-3xl font-extrabold tracking-tight sm:text-5xl">{EVENT.venue}, {EVENT.city}</h2>
-            <p className="mt-4 max-w-[38ch] font-body text-sm text-pretty text-muted-foreground">A waterfront venue for the day's plenary and the evening after party. Full directions will be shared with registered attendees.</p>
             <a href="https://www.google.com/maps/search/?api=1&query=Harbour+Point+Lagos" target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-lg border border-border bg-background/60 px-5 py-3 font-body text-sm font-bold text-foreground backdrop-blur-md transition-all hover:border-accent/40 hover:text-accent">Get Directions</a>
           </div>
           <img src={venueImage} alt="Waterfront conference venue in Lagos" loading="lazy" width={1440} height={960} className="aspect-3/2 w-full rounded-2xl object-cover" />
