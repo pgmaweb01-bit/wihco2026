@@ -111,9 +111,17 @@ function PaymentSuccessPage() {
             <p className="mt-2 font-body text-xs text-muted-foreground">
               Your ticket and QR code have been sent to your email.
             </p>
+            <a
+              href="https://getdp.co/WIHCNConIII"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-6 inline-block rounded-lg bg-primary px-6 py-3 font-body text-sm font-bold text-primary-foreground transition-all hover:bg-primary/90"
+            >
+              Get DP
+            </a>
             <Link
               to="/"
-              className="mt-8 inline-block rounded-lg bg-primary px-6 py-3 font-body text-sm font-bold text-primary-foreground transition-all hover:bg-primary/90"
+              className="mt-3 inline-block rounded-lg bg-primary px-6 py-3 font-body text-sm font-bold text-primary-foreground transition-all hover:bg-primary/90"
             >
               Back to Home
             </Link>
