@@ -9,15 +9,15 @@ async function main() {
   // ─── Admin User ──────────────────────────────────────
   const passwordHash = await bcrypt.hash("ADMIN1234", 12);
   await prisma.adminUser.upsert({
-    where: { email: "admin@wihcn.org" },
+    where: { email: "admin@wihcn.com" },
     update: {},
     create: {
-      email: "admin@wihcn.org",
+      email: "admin@wihcn.com",
       passwordHash,
       role: "admin",
     },
   });
-  console.log("✓ Admin user created (admin@wihcn.org)");
+  console.log("✓ Admin user created (admin@wihcn.com)");
 
   // ─── Registration Categories ─────────────────────────
   const categories = [

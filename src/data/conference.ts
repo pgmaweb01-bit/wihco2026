@@ -23,7 +23,7 @@ export const EVENT = {
 } as const;
 
 export const CONTACT = {
-  email: "info@wihcn.org",
+  email: "admin@wihcn.com",
   phone: "+234 916 984 3432",
   website: "wihcn.org",
   socials: [
