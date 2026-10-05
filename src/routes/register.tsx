@@ -4,6 +4,7 @@ import { z } from "zod";
 import { SiteFooter } from "@/components/site/site-footer";
 import { EVENT, getCurrentRegistrationWindow, getPrice, isCategoryInCurrentWindow } from "@/data/conference";
 import { getCategoriesFn } from "@/fns/categories";
+import { getFaqsFn } from "@/fns/faqs";
 import { createRegistrationFn } from "@/fns/registration";
 
 export const Route = createFileRoute("/register")({
@@ -71,6 +72,7 @@ function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"form" | "processing" | "redirect" | "error">("form");
   const [errorMessage, setErrorMessage] = useState("");
+  const [faqs, setFaqs] = useState<{ id: string; question: string; answer: string }[]>([]);
 
   const FALLBACK_CATEGORIES: Category[] = [
     { id: "virtual", name: "Virtual Access", description: "Attend the conference virtually.", price: 35000, currency: "NGN" },
@@ -99,6 +101,10 @@ function RegisterPage() {
     getCategoriesFn()
       .then((data) => setCategories(data.length > 0 ? data : FALLBACK_CATEGORIES))
       .catch(() => setCategories(FALLBACK_CATEGORIES));
+  }, []);
+
+  useEffect(() => {
+    getFaqsFn().then(setFaqs).catch(() => {});
   }, []);
 
   const period = getCurrentRegistrationWindow();
@@ -374,7 +380,38 @@ function RegisterPage() {
             Your place is confirmed only after payment has been verified. Your ticket and QR code are
             then emailed to you.
           </p>
+          <p className="mt-2 font-body text-xs">
+            <a href="#faq" className="font-semibold text-accent underline underline-offset-4 hover:opacity-80">
+              Read the payment FAQs
+            </a>
+          </p>
         </form>
+
+        {/* FAQ */}
+        <section id="faq" className="mt-16 border-t border-border pt-12">
+          <div className="border-b border-border pb-5">
+            <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">FAQ</span>
+            <h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
+              Payment questions
+            </h2>
+            <p className="mt-2 font-body text-sm text-muted-foreground">
+              Everything about transfers, charges and confirmations.
+            </p>
+          </div>
+          <div className="mt-2 max-w-3xl">
+            {faqs.map((f) => (
+              <details key={f.id} className="group border-b border-border py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-body text-base font-semibold text-foreground">
+                  {f.question}
+                  <span className="font-mono text-lg text-accent transition-transform group-open:rotate-45">+</span>
+                </summary>
+                <p className="mt-3 whitespace-pre-line font-body text-sm leading-relaxed text-pretty text-muted-foreground">
+                  {f.answer}
+                </p>
+              </details>
+            ))}
+          </div>
+        </section>
       </main>
 
       <SiteFooter />
