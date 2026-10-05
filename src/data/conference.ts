@@ -155,6 +155,27 @@ export const FAQS: Faq[] = [
       "Transfer requests are handled case by case by the organising team. Please get in touch before the event date.",
     displayOrder: 8,
   },
+  {
+    id: "transfer-failed-amount",
+    question: 'Why did my bank transfer fail with "incorrect amount sent"?',
+    answer:
+      'The transfer did not match the exact amount on your payment screen, so the system could not confirm it.\n\nEach bank transfer payment comes with its own account number, and that number accepts only the exact amount shown. If you send a different amount, the payment is declined and the money is returned to your account.\n\nWhat to do:\n1. Make a new payment using the payment link in your registration form. You do not need to register again.\n2. Transfer the exact amount shown on the payment screen, including any charges listed.\n3. Use the new account number. Each account number works for one payment only.\n\nIf the earlier transfer has not been returned within 3 working days, contact your bank with your payment receipt.',
+    displayOrder: 9,
+  },
+  {
+    id: "not-completed",
+    question: "My payment was not completed. Was I charged?",
+    answer:
+      'No. If your payment shows as "not completed", "insufficient funds" or "no response", it was not processed and no money was taken.\n\nCommon causes:\n- There was not enough money in the account.\n- The payment page timed out before the payment finished.\n- There was a delay at your bank.\n\nWhat to do:\n1. Check your bank app to confirm no debit took place.\n2. Make a new payment using the payment link in your registration form. You do not need to register again.\n3. If you can, use a card or a different bank account.\n\nIf you were debited, do not pay again. See question 3.',
+    displayOrder: 10,
+  },
+  {
+    id: "debited-no-confirmation",
+    question: "I was debited but have not received a confirmation. What should I do?",
+    answer:
+      "Your payment is most likely still being confirmed by your bank. Please do not make a second payment.\n\nBank transfers can take up to 48 hours to confirm. If you have not received a confirmation email by then, send the following to admin@wihcn.com:\n1. Your full name and the email address you registered with.\n2. Your bank receipt or debit alert.\n3. Your Paystack payment reference.\n\nWe will check your payment and confirm your place within 24 hours with your ticket.\n\nStill need help? Contact the WIHCN registration team at admin@wihcn.com — we respond within 24 hours on working days.",
+    displayOrder: 11,
+  },
 ];
 
 /**
@@ -191,7 +212,7 @@ export function getPrice(categoryId: string): number | null {
  * categories for the current window; once the early-bird window ends the late
  * tiers become available automatically.
  */
-export const EARLY_BIRD_WINDOW_ENDS = new Date("2026-10-09T23:59:59.999+01:00");
+export const EARLY_BIRD_WINDOW_ENDS = new Date("2026-10-11T23:59:59.999+01:00");
 
 export function getCurrentRegistrationWindow(now: Date = new Date()): "early" | "late" {
   return now <= EARLY_BIRD_WINDOW_ENDS ? "early" : "late";

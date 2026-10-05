@@ -82,7 +82,7 @@ function RegisterPage() {
     { id: "membership-late", name: "Membership + Late Registration", description: "Become a member and register — late rate.", price: 90000, currency: "NGN" },
   ];
 
-  const EARLY_BIRD_SUB = "21 Sep – 9 Oct";
+  const EARLY_BIRD_SUB = "21 Sep – 11 Oct";
   const LATE_SUB = "12 – 28 Oct";
 
   const FEE_ROWS: { id: string; name: string; sub?: string }[] = [

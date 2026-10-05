@@ -268,7 +268,7 @@ function Home() {
                 {f.question}
                 <span className="font-mono text-lg text-accent transition-transform group-open:rotate-45">+</span>
               </summary>
-              <p className="mt-3 font-body text-sm text-pretty text-muted-foreground">{f.answer}</p>
+              <p className="mt-3 whitespace-pre-line font-body text-sm leading-relaxed text-pretty text-muted-foreground">{f.answer}</p>
             </details>
           ))}
         </div>
