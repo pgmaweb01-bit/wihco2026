@@ -18,20 +18,21 @@ const NEON_AUTH_URL = (
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL ?? "admin@wihcn.com").toLowerCase();
 
-if (!NEON_AUTH_URL) {
-  throw new Error(
-    "NEON_AUTH_URL is not configured. Add it to Vercel environment variables.",
-  );
+const NEON_AUTH_ORIGIN = NEON_AUTH_URL ? new URL(NEON_AUTH_URL).origin : "";
+
+let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
+
+function getJwks() {
+  if (!jwks) {
+    jwks = createRemoteJWKSet(new URL(`${NEON_AUTH_URL}/.well-known/jwks.json`));
+  }
+  return jwks;
 }
 
-const NEON_AUTH_ORIGIN = new URL(NEON_AUTH_URL).origin;
-const JWKS_URL = `${NEON_AUTH_URL}/.well-known/jwks.json`;
-
-const jwks = createRemoteJWKSet(new URL(JWKS_URL));
-
 async function verifyAdminToken(token: string): Promise<SessionData | null> {
+  if (!NEON_AUTH_URL || !NEON_AUTH_ORIGIN) return null;
   try {
-    const { payload } = await jwtVerify(token, jwks, {
+    const { payload } = await jwtVerify(token, getJwks(), {
       issuer: NEON_AUTH_ORIGIN,
       audience: NEON_AUTH_ORIGIN,
     });
