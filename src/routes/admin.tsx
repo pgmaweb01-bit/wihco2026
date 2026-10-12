@@ -1,10 +1,16 @@
 import { createFileRoute, Link, Outlet, useNavigate, redirect } from "@tanstack/react-router";
 import { useState } from "react";
-import { getAdminSessionFn, adminLogoutFn } from "@/fns/admin-auth";
+import { getAdminSessionFn } from "@/fns/admin-auth";
+import { signOutNeon } from "@/lib/neon-auth";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: async ({ location }) => {
     if (location.pathname === "/admin/login") return;
+
+    // The session lives on the Neon auth origin, so it can only be verified
+    // from the browser. SSR runs first without the user's JWT, so the guard
+    // is enforced client-side after hydration.
+    if (typeof window === "undefined") return;
 
     const session = await getAdminSessionFn();
     if (!session) {
@@ -32,7 +38,7 @@ function AdminLayout() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await adminLogoutFn();
+    await signOutNeon();
     navigate({ to: "/admin/login" });
   };
 

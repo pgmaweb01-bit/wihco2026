@@ -4,7 +4,7 @@ import { requireAdmin } from "@/server/lib/auth";
 
 export const getAdminFaqsFn = createServerFn({ method: "POST" })
   .handler(async () => {
-    requireAdmin();
+    await requireAdmin();
     const faqs = await prisma.faq.findMany({
       orderBy: { displayOrder: "asc" },
     });
@@ -21,7 +21,7 @@ export const createOrUpdateFaqFn = createServerFn({ method: "POST" })
     active: boolean;
   }) => data)
   .handler(async ({ data }) => {
-    requireAdmin();
+    await requireAdmin();
     if (data.id) {
       const faq = await prisma.faq.update({
         where: { id: data.id },
@@ -50,7 +50,7 @@ export const createOrUpdateFaqFn = createServerFn({ method: "POST" })
 export const deleteFaqFn = createServerFn({ method: "POST" })
   .validator((data: { id: string }) => data)
   .handler(async ({ data }) => {
-    requireAdmin();
+    await requireAdmin();
     const faq = await prisma.faq.delete({
       where: { id: data.id },
     });

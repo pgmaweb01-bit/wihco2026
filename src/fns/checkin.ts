@@ -8,7 +8,7 @@ export const scanTicketFn = createServerFn({ method: "POST" })
     return { qrToken: input.qrToken };
   })
   .handler(async ({ data }) => {
-    requireAdmin();
+    await requireAdmin();
     const ticket = await getTicketByToken(data.qrToken);
 
     if (!ticket) {
@@ -58,7 +58,7 @@ export const confirmCheckInFn = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data }) => {
-    const session = requireAdmin();
+    const session = await requireAdmin();
     try {
       const result = await processCheckIn(
         data.qrToken,

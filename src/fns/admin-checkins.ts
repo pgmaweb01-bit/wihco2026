@@ -5,7 +5,7 @@ import { requireAdmin } from "@/server/lib/auth";
 export const getAdminCheckInsFn = createServerFn({ method: "POST" })
   .validator((data: { page?: number; limit?: number }) => data)
   .handler(async ({ data }) => {
-    requireAdmin();
+    await requireAdmin();
     const page = data.page ?? 1;
     const limit = data.limit ?? 20;
 

@@ -5,7 +5,7 @@ import { requireAdmin } from "@/server/lib/auth";
 
 export const exportAttendeesFn = createServerFn({ method: "POST" })
   .handler(async () => {
-    requireAdmin();
+    await requireAdmin();
     const attendees = await prisma.attendee.findMany({
       include: { category: true },
       orderBy: { createdAt: "desc" },

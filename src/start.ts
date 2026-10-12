@@ -3,6 +3,12 @@ import { getRequestProtocol } from "@tanstack/react-start/server";
 
 import { renderErrorPage } from "./lib/error-page";
 
+// Origin of the Neon Managed Better Auth gateway (see NEON_AUTH_URL). Client
+// auth calls (sign-in, token, reset) are cross-origin fetches, so it must be
+// allowed by connect-src.
+const NEON_AUTH_ORIGIN =
+  "https://ep-soft-hat-b4451rsm.neonauth.c-6.us-east-2.aws.neon.tech";
+
 const CSP = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -13,7 +19,7 @@ const CSP = [
   "font-src 'self' https://fonts.gstatic.com data:",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "script-src 'self' 'unsafe-inline'",
-  "connect-src 'self'",
+  `connect-src 'self' ${NEON_AUTH_ORIGIN}`,
   "media-src 'self' blob:",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
@@ -64,6 +70,24 @@ const csrfMiddleware = createCsrfMiddleware({
   filter: (ctx) => ctx.handlerType === "serverFn",
 });
 
+// Admin pages render their guard client-side, so the session cookie on the
+// Neon auth origin must be translated into an Authorization header on every
+// server-function call. The JWT is fetched lazily and cached (see
+// src/lib/neon-auth.ts) to keep the value fresh without hammering the gateway.
+const neonAuthMiddleware = createMiddleware({ type: "function" }).client(
+  async ({ next }) => {
+    try {
+      const { getAuthToken } = await import("./lib/neon-auth");
+      const token = await getAuthToken();
+      if (token) {
+        return next({ headers: { authorization: `Bearer ${token}` } });
+      }
+    } catch {}
+    return next();
+  },
+);
+
 export const startInstance = createStart(() => ({
   requestMiddleware: [securityHeadersMiddleware, errorMiddleware, csrfMiddleware],
+  functionMiddleware: [neonAuthMiddleware],
 }));

@@ -7,7 +7,7 @@ export const Route = createFileRoute("/api/admin/tickets/$attendeeId/resend")({
   server: {
     handlers: {
       POST: async ({ request, params }) => {
-        const unauthorized = requireAdminOrUnauthorizedResponse();
+        const unauthorized = await requireAdminOrUnauthorizedResponse();
         if (unauthorized) return unauthorized;
 
         try {

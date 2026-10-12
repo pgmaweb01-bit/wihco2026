@@ -1,7 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { adminLoginFn } from "@/fns/admin-auth";
+import {
+  signInNeon,
+  getNeonSession,
+  NeonAuthError,
+} from "@/lib/neon-auth";
 
 export const Route = createFileRoute("/admin/login")({
   head: () => ({
@@ -17,26 +21,45 @@ function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setNotice("");
+    setPassword("");
 
     try {
-      const result = await adminLoginFn({ data: { email, password } });
+      await signInNeon(email.trim(), password);
 
-      if (!result.success) {
-        setError(result.error ?? "Login failed");
+      const session = await getNeonSession();
+      const user = session?.user;
+
+      if (!user || user.email?.toLowerCase() !== "admin@wihcn.com") {
+        setError("This account does not have admin access.");
         setLoading(false);
         return;
       }
 
-      navigate({ to: "/admin" });
-    } catch {
-      setError("Something went wrong");
+      if (!user.emailVerified) {
+        setNotice(
+          "Your email is not verified yet. Request a password reset and click the link in the email to complete verification.",
+        );
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      if (err instanceof NeonAuthError) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
       setLoading(false);
+      return;
     }
+
+    navigate({ to: "/admin" });
   };
 
   return (
@@ -52,6 +75,12 @@ function AdminLoginPage() {
           {error && (
             <div className="mb-4 rounded-lg bg-destructive/10 p-3 font-body text-sm text-destructive">
               {error}
+            </div>
+          )}
+
+          {notice && (
+            <div className="mb-4 rounded-lg bg-accent/10 p-3 font-body text-sm text-accent">
+              {notice}
             </div>
           )}
 
@@ -96,6 +125,15 @@ function AdminLoginPage() {
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
+
+          <div className="mt-4 text-center">
+            <Link
+              to="/admin/forgot-password"
+              className="font-body text-xs text-muted-foreground hover:text-foreground"
+            >
+              Forgot password?
+            </Link>
+          </div>
         </form>
 
         <p className="mt-4 text-center font-body text-xs text-muted-foreground">

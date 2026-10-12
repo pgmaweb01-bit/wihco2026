@@ -4,7 +4,7 @@ import { requireAdmin } from "@/server/lib/auth";
 
 export const getAdminCategoriesFn = createServerFn({ method: "POST" })
   .handler(async () => {
-    requireAdmin();
+    await requireAdmin();
     const categories = await prisma.category.findMany({
       include: {
         _count: { select: { attendees: true } },
@@ -25,7 +25,7 @@ export const createOrUpdateCategoryFn = createServerFn({ method: "POST" })
     active: boolean;
   }) => data)
   .handler(async ({ data }) => {
-    requireAdmin();
+    await requireAdmin();
     if (data.id) {
       const category = await prisma.category.update({
         where: { id: data.id },

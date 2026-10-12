@@ -19,8 +19,10 @@ import { Route as AdminAttendeesRouteImport } from './routes/admin/attendees'
 import { Route as AdminCategoriesRouteImport } from './routes/admin/categories'
 import { Route as AdminCheckInsRouteImport } from './routes/admin/check-ins'
 import { Route as AdminFaqsRouteImport } from './routes/admin/faqs'
+import { Route as AdminForgotPasswordRouteImport } from './routes/admin/forgot-password'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminProgrammeRouteImport } from './routes/admin/programme'
+import { Route as AdminResetPasswordRouteImport } from './routes/admin/reset-password'
 import { Route as AdminSpeakersRouteImport } from './routes/admin/speakers'
 import { Route as TicketTokenRouteImport } from './routes/ticket.$token'
 import { Route as ApiPaymentsWebhookRouteImport } from './routes/api/payments/webhook'
@@ -77,6 +79,11 @@ const AdminFaqsRoute = AdminFaqsRouteImport.update({
   path: '/faqs',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminForgotPasswordRoute = AdminForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -85,6 +92,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
 const AdminProgrammeRoute = AdminProgrammeRouteImport.update({
   id: '/programme',
   path: '/programme',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminResetPasswordRoute = AdminResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSpeakersRoute = AdminSpeakersRouteImport.update({
@@ -124,8 +136,10 @@ export interface FileRoutesByFullPath {
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/check-ins': typeof AdminCheckInsRoute
   '/admin/faqs': typeof AdminFaqsRoute
+  '/admin/forgot-password': typeof AdminForgotPasswordRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/programme': typeof AdminProgrammeRoute
+  '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/speakers': typeof AdminSpeakersRoute
   '/ticket/$token': typeof TicketTokenRoute
   '/admin/': typeof AdminIndexRoute
@@ -142,8 +156,10 @@ export interface FileRoutesByTo {
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/check-ins': typeof AdminCheckInsRoute
   '/admin/faqs': typeof AdminFaqsRoute
+  '/admin/forgot-password': typeof AdminForgotPasswordRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/programme': typeof AdminProgrammeRoute
+  '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/speakers': typeof AdminSpeakersRoute
   '/ticket/$token': typeof TicketTokenRoute
   '/admin': typeof AdminIndexRoute
@@ -162,8 +178,10 @@ export interface FileRoutesById {
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/check-ins': typeof AdminCheckInsRoute
   '/admin/faqs': typeof AdminFaqsRoute
+  '/admin/forgot-password': typeof AdminForgotPasswordRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/programme': typeof AdminProgrammeRoute
+  '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/speakers': typeof AdminSpeakersRoute
   '/ticket/$token': typeof TicketTokenRoute
   '/admin/': typeof AdminIndexRoute
@@ -183,8 +201,10 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/check-ins'
     | '/admin/faqs'
+    | '/admin/forgot-password'
     | '/admin/login'
     | '/admin/programme'
+    | '/admin/reset-password'
     | '/admin/speakers'
     | '/ticket/$token'
     | '/admin/'
@@ -201,8 +221,10 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/check-ins'
     | '/admin/faqs'
+    | '/admin/forgot-password'
     | '/admin/login'
     | '/admin/programme'
+    | '/admin/reset-password'
     | '/admin/speakers'
     | '/ticket/$token'
     | '/admin'
@@ -220,8 +242,10 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/check-ins'
     | '/admin/faqs'
+    | '/admin/forgot-password'
     | '/admin/login'
     | '/admin/programme'
+    | '/admin/reset-password'
     | '/admin/speakers'
     | '/ticket/$token'
     | '/admin/'
@@ -314,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFaqsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/forgot-password': {
+      id: '/admin/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/admin/forgot-password'
+      preLoaderRoute: typeof AdminForgotPasswordRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/login'
@@ -326,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/programme'
       fullPath: '/admin/programme'
       preLoaderRoute: typeof AdminProgrammeRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reset-password': {
+      id: '/admin/reset-password'
+      path: '/reset-password'
+      fullPath: '/admin/reset-password'
+      preLoaderRoute: typeof AdminResetPasswordRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/speakers': {
@@ -371,8 +409,10 @@ interface AdminRouteChildren {
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCheckInsRoute: typeof AdminCheckInsRoute
   AdminFaqsRoute: typeof AdminFaqsRoute
+  AdminForgotPasswordRoute: typeof AdminForgotPasswordRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminProgrammeRoute: typeof AdminProgrammeRoute
+  AdminResetPasswordRoute: typeof AdminResetPasswordRoute
   AdminSpeakersRoute: typeof AdminSpeakersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -382,8 +422,10 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCheckInsRoute: AdminCheckInsRoute,
   AdminFaqsRoute: AdminFaqsRoute,
+  AdminForgotPasswordRoute: AdminForgotPasswordRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminProgrammeRoute: AdminProgrammeRoute,
+  AdminResetPasswordRoute: AdminResetPasswordRoute,
   AdminSpeakersRoute: AdminSpeakersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }

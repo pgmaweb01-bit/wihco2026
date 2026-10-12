@@ -5,6 +5,10 @@ import { getAdminSessionFn } from "@/fns/admin-auth";
 
 export const Route = createFileRoute("/check-in")({
   beforeLoad: async () => {
+    // Session lives on the Neon auth origin; enforce client-side after
+    // hydration (server-side render has no JWT to check).
+    if (typeof window === "undefined") return;
+
     const session = await getAdminSessionFn();
     if (!session) {
       throw redirect({ to: "/admin/login" });

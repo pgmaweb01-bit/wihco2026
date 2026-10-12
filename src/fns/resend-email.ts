@@ -8,7 +8,7 @@ export const resendTicketEmailFn = createServerFn({ method: "POST" })
     return { attendeeId: input.attendeeId };
   })
   .handler(async ({ data }) => {
-    requireAdmin();
+    await requireAdmin();
     const attendee = await prisma.attendee.findUnique({
       where: { id: data.attendeeId },
       include: { category: true, ticket: true },
