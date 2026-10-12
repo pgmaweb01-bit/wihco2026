@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { z } from "zod";
 import { SiteFooter } from "@/components/site/site-footer";
 import { EVENT, getCurrentRegistrationWindow, getPrice, isCategoryInCurrentWindow } from "@/data/conference";
 import { getCategoriesFn } from "@/fns/categories";
 import { getFaqsFn } from "@/fns/faqs";
 import { createRegistrationFn } from "@/fns/registration";
+import { getEmailSuggestion, getEmailValidationError, normalizeEmail } from "@/lib/email-validation";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -112,6 +113,12 @@ function RegisterPage() {
   const selected = visibleCategories.find((c) => c.id === values.categoryId) ?? null;
   const amount = selected ? getPrice(selected.id) : null;
 
+  const emailSuggestion = useMemo(() => {
+    if (!values.email) return null;
+    const suggestion = getEmailSuggestion(values.email);
+    return suggestion && suggestion !== normalizeEmail(values.email) ? suggestion : null;
+  }, [values.email]);
+
   const set = (name: keyof Fields, value: string) => {
     setValues((v) => ({ ...v, [name]: value }));
     setErrors((e) => ({ ...e, [name]: undefined }));
@@ -130,12 +137,20 @@ function RegisterPage() {
       return;
     }
 
+    const normalizedEmail = normalizeEmail(parsed.data.email);
+    const emailError = getEmailValidationError(normalizedEmail);
+    if (emailError) {
+      setErrors({ email: emailError });
+      return;
+    }
+    setValues((v) => ({ ...v, email: normalizedEmail }));
+
     setErrors({});
     setLoading(true);
     setStep("processing");
 
     try {
-      const result = await createRegistrationFn({ data: parsed.data });
+      const result = await createRegistrationFn({ data: { ...parsed.data, email: normalizedEmail } });
 
       if (result.authorizationUrl) {
         setStep("redirect");
@@ -285,6 +300,19 @@ function RegisterPage() {
                   />
                   {errors[f.name] && (
                     <p className="mt-1.5 font-body text-xs text-destructive">{errors[f.name]}</p>
+                  )}
+                  {f.name === "email" && emailSuggestion && (
+                    <p className="mt-1.5 font-body text-xs text-muted-foreground">
+                      Did you mean{" "}
+                      <button
+                        type="button"
+                        onClick={() => set("email", emailSuggestion)}
+                        className="font-semibold text-accent underline underline-offset-4"
+                      >
+                        {emailSuggestion}
+                      </button>
+                      ?
+                    </p>
                   )}
                 </div>
               ))}

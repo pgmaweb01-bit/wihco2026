@@ -4,6 +4,8 @@ import { prisma } from "@/server/lib/prisma";
 import { generateAttendeeId } from "@/server/services/attendee-id";
 import { createTicket } from "@/server/services/ticket";
 import { sendConfirmationEmail } from "@/server/lib/email";
+import { isEmailDomainDeliverable } from "@/server/lib/email-deliverability";
+import { getEmailValidationError, normalizeEmail } from "@/lib/email-validation";
 import { randomBytes } from "crypto";
 
 const REGISTRATION_PRICING: Record<string, number> = {
@@ -54,6 +56,20 @@ export const createRegistrationFn = createServerFn({
 })
   .validator((data: unknown) => registrationSchema.parse(data))
   .handler(async ({ data }) => {
+    const email = normalizeEmail(data.email);
+
+    const emailError = getEmailValidationError(email);
+    if (emailError) {
+      throw new Error(emailError);
+    }
+
+    const deliverable = await isEmailDomainDeliverable(email);
+    if (!deliverable) {
+      throw new Error(
+        "That email domain doesn't appear to accept mail. Please check it for typos and try again."
+      );
+    }
+
     const category = await prisma.registrationCategory.findUnique({
       where: { id: data.categoryId },
     });
@@ -63,7 +79,7 @@ export const createRegistrationFn = createServerFn({
     }
 
     const existingAttendee = await prisma.attendee.findUnique({
-      where: { email: data.email },
+      where: { email },
     });
 
     if (existingAttendee && existingAttendee.paymentStatus === "PAID") {
@@ -73,11 +89,11 @@ export const createRegistrationFn = createServerFn({
     const amount = getServerPrice(data.categoryId);
 
     const attendee = await prisma.attendee.upsert({
-      where: { email: data.email },
+      where: { email },
       create: {
         firstName: data.firstName,
         lastName: data.lastName,
-        email: data.email,
+        email,
         phone: data.phone,
         organisation: data.organisation,
         jobTitle: data.jobTitle,
@@ -112,7 +128,7 @@ export const createRegistrationFn = createServerFn({
     });
 
     const authorizationUrl = buildPaymentPageUrl({
-      email: data.email,
+      email,
       firstName: data.firstName,
       lastName: data.lastName,
     });
