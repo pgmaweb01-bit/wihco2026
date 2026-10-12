@@ -8,6 +8,12 @@ import { getFaqsFn } from "@/fns/faqs";
 import { createRegistrationFn } from "@/fns/registration";
 import { getEmailSuggestion, getEmailValidationError, normalizeEmail } from "@/lib/email-validation";
 
+const PAYMENT_FAQ_IDS = new Set([
+  "transfer-failed-amount",
+  "not-completed",
+  "debited-no-confirmation",
+]);
+
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
@@ -427,17 +433,19 @@ function RegisterPage() {
             </p>
           </div>
           <div className="mt-2 max-w-3xl">
-            {faqs.map((f) => (
-              <details key={f.id} className="group border-b border-border py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-body text-base font-semibold text-foreground">
-                  {f.question}
-                  <span className="font-mono text-lg text-accent transition-transform group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-3 whitespace-pre-line font-body text-sm leading-relaxed text-pretty text-muted-foreground">
-                  {f.answer}
-                </p>
-              </details>
-            ))}
+            {faqs
+              .filter((f) => PAYMENT_FAQ_IDS.has(f.id))
+              .map((f) => (
+                <details key={f.id} className="group border-b border-border py-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-body text-base font-semibold text-foreground">
+                    {f.question}
+                    <span className="font-mono text-lg text-accent transition-transform group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-3 whitespace-pre-line font-body text-sm leading-relaxed text-pretty text-muted-foreground">
+                    {f.answer}
+                  </p>
+                </details>
+              ))}
           </div>
         </section>
       </main>
