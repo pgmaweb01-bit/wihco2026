@@ -8,12 +8,6 @@ import { getFaqsFn } from "@/fns/faqs";
 import { createRegistrationFn } from "@/fns/registration";
 import { getEmailSuggestion, getEmailValidationError, normalizeEmail } from "@/lib/email-validation";
 
-const PAYMENT_FAQ_IDS = new Set([
-  "transfer-failed-amount",
-  "not-completed",
-  "debited-no-confirmation",
-]);
-
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
@@ -433,9 +427,7 @@ function RegisterPage() {
             </p>
           </div>
           <div className="mt-2 max-w-3xl">
-            {faqs
-              .filter((f) => PAYMENT_FAQ_IDS.has(f.id))
-              .map((f) => (
+            {faqs.map((f) => (
                 <details key={f.id} className="group border-b border-border py-5">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-body text-base font-semibold text-foreground">
                     {f.question}
