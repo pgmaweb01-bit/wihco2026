@@ -103,13 +103,19 @@ Building Legacy & Advancing Innovation
 30 October 2026 - Harbour Point, Lagos
 #WIHCNCON3`;
 
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: params.to,
     subject: `Registration Confirmed — WIHCN CON III | ${params.attendeeId}`,
     html,
     text,
   });
+
+  if (error) {
+    throw new Error(
+      `Resend failed to send confirmation email to ${params.to}: ${error.name} — ${error.message}`
+    );
+  }
 }
 
 export async function sendResendTicketEmail(
@@ -191,11 +197,17 @@ WIHCN CON III - Beyond Leadership
 30 October 2026 - Harbour Point, Lagos
 #WIHCNCON3`;
 
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: FROM_EMAIL,
     to: params.to,
     subject: `Your Ticket — WIHCN CON III | ${params.attendeeId}`,
     html,
     text,
   });
+
+  if (error) {
+    throw new Error(
+      `Resend failed to send ticket email to ${params.to}: ${error.name} — ${error.message}`
+    );
+  }
 }
