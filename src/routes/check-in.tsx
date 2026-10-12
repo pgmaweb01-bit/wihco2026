@@ -1,8 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { scanTicketFn, confirmCheckInFn } from "@/fns/checkin";
+import { getAdminSessionFn } from "@/fns/admin-auth";
 
 export const Route = createFileRoute("/check-in")({
+  beforeLoad: async () => {
+    const session = await getAdminSessionFn();
+    if (!session) {
+      throw redirect({ to: "/admin/login" });
+    }
+  },
   head: () => ({
     meta: [{ title: "Check-In — WIHCN CON III" }],
   }),

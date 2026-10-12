@@ -1,9 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { prisma } from "@/server/lib/prisma";
+import { requireAdmin } from "@/server/lib/auth";
 
 export const getAdminStatsFn = createServerFn({ method: "POST" })
   .validator(() => ({}))
   .handler(async () => {
+    requireAdmin();
     const [totalRegistered, paid, pending, checkedIn, general, speakers, panelists] =
       await Promise.all([
         prisma.attendee.count(),

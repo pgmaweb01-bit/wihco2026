@@ -27,12 +27,11 @@ function AdminLoginPage() {
       const result = await adminLoginFn({ data: { email, password } });
 
       if (!result.success) {
-        setError("Login failed");
+        setError(result.error ?? "Login failed");
         setLoading(false);
         return;
       }
 
-      document.cookie = result.cookie;
       navigate({ to: "/admin" });
     } catch {
       setError("Something went wrong");

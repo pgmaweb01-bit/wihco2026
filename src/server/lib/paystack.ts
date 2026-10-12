@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto";
+
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || "";
 const PAYSTACK_BASE_URL = "https://api.paystack.co";
 
@@ -106,11 +108,14 @@ export function validateWebhookSignature(
 ): boolean {
   if (!signature) return false;
 
-  const crypto = require("crypto");
-  const hash = crypto
-    .createHmac("sha512", PAYSTACK_SECRET_KEY)
+  const expected = createHmac("sha512", PAYSTACK_SECRET_KEY)
     .update(body)
     .digest("hex");
 
-  return hash === signature;
+  if (expected.length !== signature.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+  }
+  return diff === 0;
 }

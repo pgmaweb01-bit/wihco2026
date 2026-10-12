@@ -1,11 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { prisma } from "@/server/lib/prisma";
 import { sendResendTicketEmail } from "@/server/lib/email";
+import { requireAdminOrUnauthorizedResponse } from "@/server/lib/auth";
 
 export const Route = createFileRoute("/api/admin/tickets/$attendeeId/resend")({
   server: {
     handlers: {
       POST: async ({ request, params }) => {
+        const unauthorized = requireAdminOrUnauthorizedResponse();
+        if (unauthorized) return unauthorized;
+
         try {
           const attendee = await prisma.attendee.findUnique({
             where: { id: params.attendeeId },

@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { prisma } from "@/server/lib/prisma";
+import { requireAdmin } from "@/server/lib/auth";
 
 export const getAdminSpeakersFn = createServerFn({ method: "POST" })
   .handler(async () => {
+    requireAdmin();
     const speakers = await prisma.speaker.findMany({
       orderBy: { displayOrder: "asc" },
     });
@@ -23,6 +25,7 @@ export const createOrUpdateSpeakerFn = createServerFn({ method: "POST" })
     active: boolean;
   }) => data)
   .handler(async ({ data }) => {
+    requireAdmin();
     if (data.id) {
       const speaker = await prisma.speaker.update({
         where: { id: data.id },
@@ -59,6 +62,7 @@ export const createOrUpdateSpeakerFn = createServerFn({ method: "POST" })
 export const deleteSpeakerFn = createServerFn({ method: "POST" })
   .validator((data: { id: string }) => data)
   .handler(async ({ data }) => {
+    requireAdmin();
     const speaker = await prisma.speaker.delete({
       where: { id: data.id },
     });

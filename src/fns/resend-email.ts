@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { prisma } from "@/server/lib/prisma";
+import { requireAdmin } from "@/server/lib/auth";
 import { sendResendTicketEmail } from "@/server/lib/email";
 
 export const resendTicketEmailFn = createServerFn({ method: "POST" })
@@ -7,6 +8,7 @@ export const resendTicketEmailFn = createServerFn({ method: "POST" })
     return { attendeeId: input.attendeeId };
   })
   .handler(async ({ data }) => {
+    requireAdmin();
     const attendee = await prisma.attendee.findUnique({
       where: { id: data.attendeeId },
       include: { category: true, ticket: true },

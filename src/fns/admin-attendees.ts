@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { prisma } from "@/server/lib/prisma";
+import { requireAdmin } from "@/server/lib/auth";
 import {
   settlePaidRegistration,
   completePaidRegistration,
@@ -16,6 +17,7 @@ export const getAdminAttendeesFn = createServerFn({ method: "POST" })
     checkInStatus?: string;
   }) => data)
   .handler(async ({ data }) => {
+    requireAdmin();
     const page = data.page ?? 1;
     const limit = data.limit ?? 20;
 
@@ -82,6 +84,7 @@ export const updateAdminAttendeeFn = createServerFn({ method: "POST" })
     categoryId?: string;
   }) => data)
   .handler(async ({ data }) => {
+    requireAdmin();
     const { id, ...updateData } = data;
 
     const attendee = await prisma.attendee.update({
@@ -96,6 +99,7 @@ export const updateAdminAttendeeFn = createServerFn({ method: "POST" })
 export const deleteAdminAttendeeFn = createServerFn({ method: "POST" })
   .validator((data: { id: string }) => data)
   .handler(async ({ data }) => {
+    requireAdmin();
     const attendee = await prisma.attendee.findUnique({
       where: { id: data.id },
       select: { attendeeId: true, email: true },
@@ -116,6 +120,7 @@ export const deleteAdminAttendeeFn = createServerFn({ method: "POST" })
 export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
   .validator((data: { id: string }) => data)
   .handler(async ({ data }) => {
+    requireAdmin();
     const attendee = await prisma.attendee.findUnique({
       where: { id: data.id },
       select: {
@@ -171,6 +176,7 @@ export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
 export const markAdminAttendeePaidFn = createServerFn({ method: "POST" })
   .validator((data: { id: string; amount?: number }) => data)
   .handler(async ({ data }) => {
+    requireAdmin();
     const attendee = await prisma.attendee.findUnique({
       where: { id: data.id },
       include: { category: true, payment: true },

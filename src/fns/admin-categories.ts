@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { prisma } from "@/server/lib/prisma";
+import { requireAdmin } from "@/server/lib/auth";
 
 export const getAdminCategoriesFn = createServerFn({ method: "POST" })
   .handler(async () => {
+    requireAdmin();
     const categories = await prisma.category.findMany({
       include: {
         _count: { select: { attendees: true } },
@@ -23,6 +25,7 @@ export const createOrUpdateCategoryFn = createServerFn({ method: "POST" })
     active: boolean;
   }) => data)
   .handler(async ({ data }) => {
+    requireAdmin();
     if (data.id) {
       const category = await prisma.category.update({
         where: { id: data.id },

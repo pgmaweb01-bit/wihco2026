@@ -1,9 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { stringify } from "csv-stringify/sync";
 import { prisma } from "@/server/lib/prisma";
+import { requireAdmin } from "@/server/lib/auth";
 
 export const exportAttendeesFn = createServerFn({ method: "POST" })
   .handler(async () => {
+    requireAdmin();
     const attendees = await prisma.attendee.findMany({
       include: { category: true },
       orderBy: { createdAt: "desc" },

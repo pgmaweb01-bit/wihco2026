@@ -1,7 +1,16 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, redirect } from "@tanstack/react-router";
 import { useState } from "react";
+import { getAdminSessionFn, adminLogoutFn } from "@/fns/admin-auth";
 
 export const Route = createFileRoute("/admin")({
+  beforeLoad: async ({ location }) => {
+    if (location.pathname === "/admin/login") return;
+
+    const session = await getAdminSessionFn();
+    if (!session) {
+      throw redirect({ to: "/admin/login" });
+    }
+  },
   head: () => ({
     meta: [{ title: "Admin Dashboard — WIHCN CON III" }],
   }),
@@ -23,7 +32,7 @@ function AdminLayout() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
+    await adminLogoutFn();
     navigate({ to: "/admin/login" });
   };
 

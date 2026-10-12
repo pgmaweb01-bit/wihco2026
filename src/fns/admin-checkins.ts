@@ -1,9 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { prisma } from "@/server/lib/prisma";
+import { requireAdmin } from "@/server/lib/auth";
 
 export const getAdminCheckInsFn = createServerFn({ method: "POST" })
   .validator((data: { page?: number; limit?: number }) => data)
   .handler(async ({ data }) => {
+    requireAdmin();
     const page = data.page ?? 1;
     const limit = data.limit ?? 20;
 

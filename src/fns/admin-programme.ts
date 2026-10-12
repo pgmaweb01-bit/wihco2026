@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { prisma } from "@/server/lib/prisma";
+import { requireAdmin } from "@/server/lib/auth";
 
 export const getAdminProgrammeFn = createServerFn({ method: "POST" })
   .handler(async () => {
+    requireAdmin();
     const sessions = await prisma.programmeSession.findMany({
       orderBy: { displayOrder: "asc" },
     });
@@ -22,6 +24,7 @@ export const createOrUpdateProgrammeFn = createServerFn({ method: "POST" })
     active: boolean;
   }) => data)
   .handler(async ({ data }) => {
+    requireAdmin();
     const sessionData = {
       title: data.title,
       description: data.description,
@@ -50,6 +53,7 @@ export const createOrUpdateProgrammeFn = createServerFn({ method: "POST" })
 export const deleteProgrammeFn = createServerFn({ method: "POST" })
   .validator((data: { id: string }) => data)
   .handler(async ({ data }) => {
+    requireAdmin();
     const session = await prisma.programmeSession.delete({
       where: { id: data.id },
     });

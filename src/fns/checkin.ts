@@ -1,12 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getTicketByToken } from "@/server/services/ticket";
 import { processCheckIn } from "@/server/services/check-in";
+import { requireAdmin } from "@/server/lib/auth";
 
 export const scanTicketFn = createServerFn({ method: "POST" })
   .validator((input: { qrToken: string }) => {
     return { qrToken: input.qrToken };
   })
   .handler(async ({ data }) => {
+    requireAdmin();
     const ticket = await getTicketByToken(data.qrToken);
 
     if (!ticket) {
@@ -56,8 +58,13 @@ export const confirmCheckInFn = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data }) => {
+    const session = requireAdmin();
     try {
-      const result = await processCheckIn(data.qrToken, data.checkedInBy, data.device);
+      const result = await processCheckIn(
+        data.qrToken,
+        data.checkedInBy ?? session.email,
+        data.device,
+      );
       return result;
     } catch (error) {
       if (error instanceof Error && error.message === "INVALID_TICKET") {
