@@ -2,12 +2,12 @@ import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/r
 import { getRequestProtocol } from "@tanstack/react-start/server";
 
 import { renderErrorPage } from "./lib/error-page";
+import { NEON_AUTH_URL_DEFAULT } from "./lib/neon-auth-config";
 
-// Origin of the Neon Managed Better Auth gateway (see NEON_AUTH_URL). Client
+// Origin of the Neon Managed Better Auth gateway (see neon-auth-config). Client
 // auth calls (sign-in, token, reset) are cross-origin fetches, so it must be
 // allowed by connect-src.
-const NEON_AUTH_ORIGIN =
-  "https://ep-soft-hat-b4451rsm.neonauth.c-6.us-east-2.aws.neon.tech";
+const NEON_AUTH_ORIGIN = new URL(NEON_AUTH_URL_DEFAULT).origin;
 
 const CSP = [
   "default-src 'self'",

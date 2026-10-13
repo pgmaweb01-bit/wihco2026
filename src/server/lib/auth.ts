@@ -1,6 +1,8 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 
+import { NEON_AUTH_URL_DEFAULT } from "../../lib/neon-auth-config";
+
 export interface SessionData {
   adminId: string;
   email: string;
@@ -9,11 +11,9 @@ export interface SessionData {
 }
 
 const NEON_AUTH_URL = (
-  process.env.NEON_AUTH_URL ??
-  (typeof import.meta.env !== "undefined"
-    ? import.meta.env.VITE_NEON_AUTH_URL
-    : undefined) ??
-  ""
+  process.env.NEON_AUTH_URL ||
+  import.meta.env.VITE_NEON_AUTH_URL ||
+  NEON_AUTH_URL_DEFAULT
 ).replace(/\/+$/, "");
 
 const ADMIN_EMAIL = (

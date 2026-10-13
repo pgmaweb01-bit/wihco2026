@@ -7,10 +7,11 @@
  * src/start.ts functionMiddleware).
  */
 
-const AUTH_URL = (import.meta.env.VITE_NEON_AUTH_URL ?? "").replace(
-  /\/+$/,
-  "",
-);
+import { NEON_AUTH_URL_DEFAULT } from "./neon-auth-config";
+
+const AUTH_URL = (
+  import.meta.env.VITE_NEON_AUTH_URL || NEON_AUTH_URL_DEFAULT
+).replace(/\/+$/, "");
 
 export class NeonAuthError extends Error {
   code: string;
