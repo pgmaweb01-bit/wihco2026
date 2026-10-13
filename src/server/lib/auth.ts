@@ -16,11 +16,16 @@ const NEON_AUTH_URL = (
   NEON_AUTH_URL_DEFAULT
 ).replace(/\/+$/, "");
 
-const ADMIN_EMAIL = (
-  process.env.ADMIN_EMAIL ?? "raynovastudio@gmail.com"
-).toLowerCase();
+// Single-admin conference site: hardcode the one authorized address so the
+// server always agrees with the login UI. A stale ADMIN_EMAIL env var on the
+// host previously caused a redirect loop (server rejected the valid JWT).
+const ADMIN_EMAIL = "raynovastudio@gmail.com";
 
 const NEON_AUTH_ORIGIN = NEON_AUTH_URL ? new URL(NEON_AUTH_URL).origin : "";
+
+// A cold serverless instance can stall on the JWKS fetch; fail fast so we
+// return null (graceful redirect) instead of hanging past the host timeout.
+const VERIFY_TIMEOUT_MS = 4000;
 
 let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
 
@@ -34,21 +39,32 @@ function getJwks() {
 async function verifyAdminToken(token: string): Promise<SessionData | null> {
   if (!NEON_AUTH_URL || !NEON_AUTH_ORIGIN) return null;
   try {
-    const { payload } = await jwtVerify(token, getJwks(), {
-      issuer: NEON_AUTH_ORIGIN,
-      audience: NEON_AUTH_ORIGIN,
+    const verify = (async () => {
+      const { payload } = await jwtVerify(token, getJwks(), {
+        issuer: NEON_AUTH_ORIGIN,
+        audience: NEON_AUTH_ORIGIN,
+      });
+
+      const email = typeof payload.email === "string" ? payload.email.toLowerCase() : "";
+      if (!email || email !== ADMIN_EMAIL) return null;
+      if (payload.emailVerified !== true) return null;
+
+      return {
+        adminId: typeof payload.sub === "string" ? payload.sub : email,
+        email: email,
+        role: "admin",
+        name: typeof payload.name === "string" ? payload.name : undefined,
+      };
+    })();
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<null>((resolve) => {
+      timer = setTimeout(() => resolve(null), VERIFY_TIMEOUT_MS);
     });
 
-    const email = typeof payload.email === "string" ? payload.email.toLowerCase() : "";
-    if (!email || email !== ADMIN_EMAIL) return null;
-    if (payload.emailVerified !== true) return null;
-
-    return {
-      adminId: typeof payload.sub === "string" ? payload.sub : email,
-      email: email,
-      role: "admin",
-      name: typeof payload.name === "string" ? payload.name : undefined,
-    };
+    return await Promise.race([verify, timeout]).finally(() => {
+      if (timer) clearTimeout(timer);
+    });
   } catch {
     return null;
   }
