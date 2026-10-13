@@ -16,7 +16,9 @@ const NEON_AUTH_URL = (
   ""
 ).replace(/\/+$/, "");
 
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL ?? "admin@wihcn.com").toLowerCase();
+const ADMIN_EMAIL = (
+  process.env.ADMIN_EMAIL ?? "raynovastudio@gmail.com"
+).toLowerCase();
 
 const NEON_AUTH_ORIGIN = NEON_AUTH_URL ? new URL(NEON_AUTH_URL).origin : "";
 

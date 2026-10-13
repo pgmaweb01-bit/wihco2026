@@ -13,7 +13,7 @@ export const Route = createFileRoute("/admin/forgot-password")({
 });
 
 function ForgotPasswordPage() {
-  const [email, setEmail] = useState("admin@wihcn.com");
+  const [email, setEmail] = useState("raynovastudio@gmail.com");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");

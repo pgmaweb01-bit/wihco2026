@@ -16,7 +16,7 @@ export const Route = createFileRoute("/admin/login")({
 
 function AdminLoginPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("admin@wihcn.com");
+  const [email, setEmail] = useState("raynovastudio@gmail.com");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,7 +36,7 @@ function AdminLoginPage() {
       const session = await getNeonSession();
       const user = session?.user;
 
-      if (!user || user.email?.toLowerCase() !== "admin@wihcn.com") {
+      if (!user || user.email?.toLowerCase() !== "raynovastudio@gmail.com") {
         setError("This account does not have admin access.");
         setLoading(false);
         return;
