@@ -1,15 +1,30 @@
-import { createFileRoute, Link, Outlet, useNavigate, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useNavigate,
+  redirect,
+  useLocation,
+} from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import { getAdminSessionFn } from "@/fns/admin-auth";
 import { signOutNeon } from "@/lib/neon-auth";
 
+// Pages under /admin that anyone may reach without a session (login screen
+// and the password-recovery flow). They render bare — no sidebar, no guard.
+const PUBLIC_AUTH_PATHS = ["/admin/login", "/admin/forgot-password", "/admin/reset-password"];
+
+function isPublicAuthPath(pathname: string): boolean {
+  return PUBLIC_AUTH_PATHS.includes(pathname);
+}
+
 export const Route = createFileRoute("/admin")({
   beforeLoad: async ({ location }) => {
-    if (location.pathname === "/admin/login") return;
+    if (isPublicAuthPath(location.pathname)) return;
 
     // The session lives on the Neon auth origin, so it can only be verified
     // from the browser. SSR runs first without the user's JWT, so the guard
-    // is enforced client-side after hydration.
+    // is enforced client-side (see AdminLayout) after hydration.
     if (typeof window === "undefined") return;
 
     const session = await getAdminSessionFn();
@@ -34,8 +49,53 @@ const NAV_ITEMS = [
 ];
 
 function AdminLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Nothing protected renders until the client confirms a session — this
+  // keeps the sidebar and dashboard out of the SSR HTML and prevents the
+  // "zero records" flash for signed-out visitors on a direct page load.
+  const [authed, setAuthed] = useState(false);
+
+  const publicPage = isPublicAuthPath(location.pathname);
+
+  useEffect(() => {
+    if (publicPage) return;
+    let cancelled = false;
+
+    getAdminSessionFn()
+      .then((session) => {
+        if (cancelled) return;
+        if (!session) {
+          navigate({ to: "/admin/login", replace: true });
+          return;
+        }
+        setAuthed(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        navigate({ to: "/admin/login", replace: true });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [publicPage, navigate]);
+
+  // Login / forgot-password / reset-password: bare page, no chrome.
+  if (publicPage) {
+    return <Outlet />;
+  }
+
+  // Protected pages before the session check resolves (or after a redirect
+  // kicks in): full-page spinner only — no sidebar, no dashboard shell.
+  if (!authed) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     await signOutNeon();
@@ -78,7 +138,7 @@ function AdminLayout() {
               >
                 {item.label}
               </Link>
-            )
+            ),
           )}
         </nav>
 
@@ -116,7 +176,9 @@ function AdminLayout() {
           >
             <span className="text-lg">☰</span>
           </button>
-          <h2 className="font-display text-sm font-bold text-foreground">WIHCN CON III Dashboard</h2>
+          <h2 className="font-display text-sm font-bold text-foreground">
+            WIHCN CON III Dashboard
+          </h2>
         </header>
 
         <main className="p-6">
