@@ -1,14 +1,21 @@
 import { prisma } from "../lib/prisma";
 import { verifyPaystackTransaction } from "../lib/paystack";
+import { getServerPrice, isAmountMatch, isCurrencyMatch, PAYSTACK_CURRENCY } from "../lib/pricing";
 import { generateAttendeeId } from "./attendee-id";
-import { createTicket } from "./ticket";
+import { generateQrToken, generateTicketReference } from "./ticket";
 import { sendConfirmationEmail } from "../lib/email";
-import type { Attendee, PaymentProvider, PaymentRecordStatus, RegistrationCategory } from "@prisma/client";
+import type {
+  Attendee,
+  PaymentProvider,
+  PaymentRecordStatus,
+  RegistrationCategory,
+} from "@prisma/client";
 
 export type SettlePaidResult = {
   settled: boolean;
   attendeeId?: string;
-  reason?: "already_settled" | "not_paid" | "attendee_not_found";
+  reason?:
+    "already_settled" | "not_paid" | "attendee_not_found" | "amount_mismatch" | "currency_mismatch";
 };
 
 export type CompletePaidResult = {
@@ -18,6 +25,15 @@ export type CompletePaidResult = {
   ticketReference: string;
   qrToken: string;
 };
+
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code?: string }).code === "P2002"
+  );
+}
 
 export async function completePaidRegistration(params: {
   attendee: Attendee & { category: RegistrationCategory };
@@ -30,55 +46,89 @@ export async function completePaidRegistration(params: {
   const paidAt = params.paidAt ?? new Date();
   const provider: PaymentProvider = params.provider ?? "PAYSTACK";
 
-  await prisma.payment.create({
-    data: {
-      reference: params.reference,
-      amount: params.amount,
-      status: "SUCCESS" as PaymentRecordStatus,
-      paidAt,
-      provider,
-      attendeeId: attendee.id,
-    },
-  });
-
-  const uniqueAttendeeId = await generateAttendeeId();
-  const ticket = await createTicket(attendee.id);
-
-  await prisma.attendee.update({
-    where: { id: attendee.id },
-    data: {
-      attendeeId: uniqueAttendeeId,
-      paymentStatus: "PAID",
-      paymentAmount: params.amount,
-      paymentReference: params.reference,
-      paidAt,
-      ticketReference: ticket.ticketReference,
-      ticketStatus: "ISSUED",
-    },
-  });
-
-  const ticketUrl = `${process.env.APP_URL}/ticket/${ticket.qrToken}`;
-  const qrCodeUrl = `${process.env.APP_URL}/api/qr/${ticket.qrToken}`;
-
-  try {
-    await sendConfirmationEmail({
-      to: attendee.email,
-      attendeeName: `${attendee.firstName} ${attendee.lastName}`,
-      attendeeId: uniqueAttendeeId,
-      ticketUrl,
-      qrCodeUrl,
-    });
-  } catch (err) {
-    console.error("Failed to send confirmation email:", err);
+  if (params.amount <= 0) {
+    throw new Error("Cannot complete registration with a non-positive amount");
   }
 
-  return {
-    completed: true,
-    attendeeId: attendee.id,
-    attendeeUniqueId: uniqueAttendeeId,
-    ticketReference: ticket.ticketReference,
-    qrToken: ticket.qrToken,
-  };
+  try {
+    return await prisma.$transaction(async (tx) => {
+      // Idempotency: a concurrent settle for the same reference loses here.
+      const existing = await tx.payment.findUnique({
+        where: { reference: params.reference },
+      });
+      if (existing) {
+        throw Object.assign(new Error("Payment already recorded"), {
+          code: "P2002",
+        });
+      }
+
+      await tx.payment.create({
+        data: {
+          reference: params.reference,
+          amount: params.amount,
+          status: "SUCCESS" as PaymentRecordStatus,
+          paidAt,
+          provider,
+          attendeeId: attendee.id,
+        },
+      });
+
+      const uniqueAttendeeId = await generateAttendeeId();
+      const ticketReference = generateTicketReference();
+      const qrToken = generateQrToken();
+
+      await tx.ticket.create({
+        data: {
+          attendeeId: attendee.id,
+          ticketReference,
+          qrToken,
+          status: "ISSUED",
+          issuedAt: paidAt,
+        },
+      });
+
+      await tx.attendee.update({
+        where: { id: attendee.id },
+        data: {
+          attendeeId: uniqueAttendeeId,
+          paymentStatus: "PAID",
+          paymentAmount: params.amount,
+          paymentReference: params.reference,
+          paidAt,
+          ticketReference,
+          ticketStatus: "ISSUED",
+        },
+      });
+
+      return {
+        completed: true,
+        attendeeId: attendee.id,
+        attendeeUniqueId: uniqueAttendeeId,
+        ticketReference,
+        qrToken,
+      };
+    });
+  } catch (err) {
+    // Unique-constraint race (double webhook / concurrent admin action):
+    // the first writer won — report success with the existing ticket.
+    if (isUniqueViolation(err)) {
+      const existing = await prisma.payment.findUnique({
+        where: { reference: params.reference },
+        include: { attendee: { include: { ticket: true } } },
+      });
+      if (existing) {
+        return {
+          completed: true,
+          attendeeId: existing.attendeeId,
+          attendeeUniqueId: existing.attendee.attendeeId ?? "",
+          ticketReference:
+            existing.attendee.ticket?.ticketReference ?? existing.attendee.ticketReference ?? "",
+          qrToken: existing.attendee.ticket?.qrToken ?? "",
+        };
+      }
+    }
+    throw err;
+  }
 }
 
 export async function settlePaidRegistration(params: {
@@ -90,7 +140,11 @@ export async function settlePaidRegistration(params: {
   });
 
   if (existingPayment) {
-    return { settled: true, attendeeId: existingPayment.attendeeId, reason: "already_settled" };
+    return {
+      settled: true,
+      attendeeId: existingPayment.attendeeId,
+      reason: "already_settled",
+    };
   }
 
   const verification = await verifyPaystackTransaction(params.reference);
@@ -119,16 +173,48 @@ export async function settlePaidRegistration(params: {
   }
 
   // Static Payment Page transactions use Paystack's own generated reference,
-  // so fall back to matching the payer by email.
+  // so fall back to matching the payer by email — but never re-settle an
+  // attendee who is already paid.
   if (!attendee && params.email) {
     attendee = await prisma.attendee.findFirst({
-      where: { email: { equals: params.email, mode: "insensitive" } },
+      where: {
+        email: { equals: params.email, mode: "insensitive" },
+        paymentStatus: { not: "PAID" },
+      },
       include: { category: true },
     });
   }
 
   if (!attendee) {
     return { settled: false, reason: "attendee_not_found" };
+  }
+
+  // Server-side settlement guards: the paid amount and currency must match
+  // what this attendee is supposed to pay. Paystack amounts are kobo.
+  const expectedNaira = attendee.paymentAmount ?? getServerPrice(attendee.categoryId);
+
+  if (!isCurrencyMatch(verification.data.currency, attendee.paymentCurrency)) {
+    console.error(
+      "Settlement rejected (currency_mismatch):",
+      params.reference,
+      "paid",
+      verification.data.currency,
+      "expected",
+      attendee.paymentCurrency || PAYSTACK_CURRENCY,
+    );
+    return { settled: false, attendeeId: attendee.id, reason: "currency_mismatch" };
+  }
+
+  if (!isAmountMatch(verification.data.amount, expectedNaira)) {
+    console.error(
+      "Settlement rejected (amount_mismatch):",
+      params.reference,
+      "paid kobo",
+      verification.data.amount,
+      "expected kobo",
+      Math.round(expectedNaira * 100),
+    );
+    return { settled: false, attendeeId: attendee.id, reason: "amount_mismatch" };
   }
 
   const amount = verification.data.amount / 100;

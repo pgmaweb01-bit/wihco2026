@@ -1,37 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { prisma } from "@/server/lib/prisma";
-import { generateAttendeeId } from "@/server/services/attendee-id";
-import { createTicket } from "@/server/services/ticket";
-import { sendConfirmationEmail } from "@/server/lib/email";
+import { getServerPrice } from "@/server/lib/pricing";
+import { getPaymentPageUrl } from "@/server/lib/paystack";
 import { isEmailDomainDeliverable } from "@/server/lib/email-deliverability";
 import { getEmailValidationError, normalizeEmail } from "@/lib/email-validation";
 import { randomBytes } from "crypto";
-
-const REGISTRATION_PRICING: Record<string, number> = {
-  virtual: 35000,
-  "member-early": 50000,
-  "member-late": 60000,
-  "nonmember-early": 70000,
-  "nonmember-late": 80000,
-  "membership-early": 80000,
-  "membership-late": 90000,
-};
-
-const PAYMENT_PAGE_URL = "https://paystack.shop/pay/wihcniii2026";
-
-function getServerPrice(categoryId: string): number {
-  const price = REGISTRATION_PRICING[categoryId];
-  if (!price) throw new Error("Invalid registration category");
-  return price;
-}
 
 function buildPaymentPageUrl(params: {
   email: string;
   firstName: string;
   lastName: string;
 }): string {
-  const url = new URL(PAYMENT_PAGE_URL);
+  const url = new URL(getPaymentPageUrl());
   url.searchParams.set("email", params.email);
   url.searchParams.set("first_name", params.firstName);
   url.searchParams.set("last_name", params.lastName);
@@ -66,7 +47,7 @@ export const createRegistrationFn = createServerFn({
     const deliverable = await isEmailDomainDeliverable(email);
     if (!deliverable) {
       throw new Error(
-        "That email domain doesn't appear to accept mail. Please check it for typos and try again."
+        "That email domain doesn't appear to accept mail. Please check it for typos and try again.",
       );
     }
 
