@@ -134,6 +134,8 @@ export async function completePaidRegistration(params: {
 export async function settlePaidRegistration(params: {
   reference: string;
   email?: string;
+  attendeeId?: string;
+  bypassAmountCheck?: boolean;
 }): Promise<SettlePaidResult> {
   const existingPayment = await prisma.payment.findUnique({
     where: { reference: params.reference },
@@ -158,7 +160,14 @@ export async function settlePaidRegistration(params: {
 
   let attendee: (Attendee & { category: RegistrationCategory }) | null = null;
 
-  if (metadataAttendeeId) {
+  if (params.attendeeId) {
+    attendee = await prisma.attendee.findUnique({
+      where: { id: params.attendeeId },
+      include: { category: true },
+    });
+  }
+
+  if (!attendee && metadataAttendeeId) {
     attendee = await prisma.attendee.findUnique({
       where: { id: metadataAttendeeId },
       include: { category: true },
@@ -173,12 +182,13 @@ export async function settlePaidRegistration(params: {
   }
 
   // Static Payment Page transactions use Paystack's own generated reference,
-  // so fall back to matching the payer by email — but never re-settle an
-  // attendee who is already paid.
-  if (!attendee && params.email) {
+  // so fall back to matching the payer by email — checking both caller-supplied
+  // email and the customer email recorded by Paystack.
+  const lookupEmail = params.email || verification.data.customer?.email;
+  if (!attendee && lookupEmail) {
     attendee = await prisma.attendee.findFirst({
       where: {
-        email: { equals: params.email, mode: "insensitive" },
+        email: { equals: lookupEmail, mode: "insensitive" },
         paymentStatus: { not: "PAID" },
       },
       include: { category: true },
@@ -205,7 +215,7 @@ export async function settlePaidRegistration(params: {
     return { settled: false, attendeeId: attendee.id, reason: "currency_mismatch" };
   }
 
-  if (!isAmountMatch(verification.data.amount, expectedNaira)) {
+  if (!params.bypassAmountCheck && !isAmountMatch(verification.data.amount, expectedNaira)) {
     console.error(
       "Settlement rejected (amount_mismatch):",
       params.reference,

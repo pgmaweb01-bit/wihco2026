@@ -29,12 +29,25 @@ export function toKobo(amountNaira: number): number {
 }
 
 /**
- * Pure settlement guard: the amount Paystack reports (kobo) must exactly
- * equal the server-computed expected price for the attendee's category.
+ * Settlement guard: verifies that the amount Paystack reports (kobo) covers
+ * the server-computed expected price for the attendee's category.
+ *
+ * Accepts exact matches as well as transactions where Paystack passes customer
+ * processing fees (1.5% + ₦100, capped at ₦2,000 in Nigeria + standard gateway margin).
+ * Strictly rejects any underpayment.
  */
 export function isAmountMatch(paidKobo: number, expectedNaira: number): boolean {
   if (!Number.isFinite(paidKobo) || paidKobo <= 0) return false;
-  return paidKobo === toKobo(expectedNaira);
+  const expectedKobo = toKobo(expectedNaira);
+  if (paidKobo === expectedKobo) return true;
+
+  // Maximum allowable gateway processing fee pass-through (up to ₦2,500 in kobo)
+  const maxFeeKobo = Math.min(Math.round(expectedKobo * 0.05) + 250000, 250000);
+  if (paidKobo >= expectedKobo && paidKobo <= expectedKobo + maxFeeKobo) {
+    return true;
+  }
+
+  return false;
 }
 
 /** Pure settlement guard: paid currency must match the attendee's currency. */

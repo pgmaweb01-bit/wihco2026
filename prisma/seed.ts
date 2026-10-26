@@ -7,17 +7,7 @@ async function main() {
   console.log("Seeding database...");
 
   // ─── Admin User ──────────────────────────────────────
-  const passwordHash = await bcrypt.hash("ADMIN1234", 12);
-  await prisma.adminUser.upsert({
-    where: { email: "admin@wihcn.com" },
-    update: {},
-    create: {
-      email: "admin@wihcn.com",
-      passwordHash,
-      role: "admin",
-    },
-  });
-  console.log("✓ Admin user created (admin@wihcn.com)");
+  // Admin authentication is managed via Neon Auth. No default credentials seeded.
 
   // ─── Registration Categories ─────────────────────────
   const categories = [

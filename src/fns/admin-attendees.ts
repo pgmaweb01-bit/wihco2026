@@ -118,7 +118,7 @@ export const deleteAdminAttendeeFn = createServerFn({ method: "POST" })
   });
 
 export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
-  .validator((data: { id: string }) => data)
+  .validator((data: { id: string; paystackReference?: string }) => data)
   .handler(async ({ data }) => {
     await requireAdmin();
     const attendee = await prisma.attendee.findUnique({
@@ -128,6 +128,7 @@ export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
         attendeeId: true,
         email: true,
         paymentStatus: true,
+        paymentReference: true,
       },
     });
 
@@ -139,31 +140,31 @@ export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
       return { success: false, error: "Attendee is already marked as PAID" };
     }
 
-    const pendingAttendee = await prisma.attendee.findUnique({
-      where: { id: data.id },
-      select: {
-        id: true,
-        paymentReference: true,
-        ticketStatus: true,
-      },
-    });
+    const ref = data.paystackReference?.trim() || attendee.paymentReference;
 
-    if (!pendingAttendee?.paymentReference) {
+    if (!ref) {
       return {
         success: false,
-        error: "No payment reference — the Paystack transaction was never initialized for this registration",
+        error: "Please enter the Paystack Transaction Reference from your Paystack receipt",
       };
     }
 
     const result = await settlePaidRegistration({
-      reference: pendingAttendee.paymentReference,
+      reference: ref,
+      email: attendee.email,
+      attendeeId: attendee.id,
+      bypassAmountCheck: Boolean(data.paystackReference?.trim()),
     });
 
     if (!result.settled) {
       const message =
         result.reason === "not_paid"
-          ? "Paystack reports this transaction has not been paid"
-          : "Could not match this registration to a Paystack transaction";
+          ? "Paystack reports this transaction has not been successfully paid"
+          : result.reason === "amount_mismatch"
+            ? "Amount paid on Paystack did not match the expected category fee"
+            : result.reason === "currency_mismatch"
+              ? "Payment currency mismatch"
+              : "Could not match this registration to a Paystack transaction. Check the reference or use 'Mark Paid'.";
       return { success: false, error: message };
     }
 

@@ -117,13 +117,25 @@ function AdminAttendees() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const handleVerify = async (attendeeId: string) => {
+  const handleVerify = async (attendeeId: string, name: string) => {
+    const inputRef = window.prompt(
+      `Verify Paystack payment for ${name}.\n\nEnter the Paystack Transaction Reference from your Paystack dashboard/receipt (or leave blank to auto-verify):`,
+      "",
+    );
+
+    if (inputRef === null) return;
+
     setActionLoading(attendeeId);
     setToast(null);
     try {
-      const res: any = await verifyAdminAttendeePaymentFn({ data: { id: attendeeId } });
+      const res: any = await verifyAdminAttendeePaymentFn({
+        data: {
+          id: attendeeId,
+          ...(inputRef.trim() ? { paystackReference: inputRef.trim() } : {}),
+        },
+      });
       if (res?.success) {
-        setToast({ message: res?.message || "Payment verified!", type: "success" });
+        setToast({ message: res?.message || "Payment verified and ticket issued!", type: "success" });
         fetchAttendees(pagination.page, search);
       } else {
         setToast({ message: res?.error || "Payment could not be verified.", type: "error" });
@@ -339,7 +351,7 @@ function AdminAttendees() {
                       )}
                       {a.paymentStatus === "PENDING" && (
                         <button
-                          onClick={() => handleVerify(a.id)}
+                          onClick={() => handleVerify(a.id, `${a.firstName} ${a.lastName}`)}
                           disabled={actionLoading === a.id}
                           title="Requery Paystack to verify this pending payment"
                           className="rounded bg-accent px-3 py-1.5 text-[10px] font-bold text-accent-foreground hover:bg-accent/90 disabled:opacity-50"
