@@ -2,11 +2,21 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
 import { z } from "zod";
 import { SiteFooter } from "@/components/site/site-footer";
-import { EVENT, getCurrentRegistrationWindow, getPrice, isCategoryInCurrentWindow } from "@/data/conference";
+import {
+  EVENT,
+  getCurrentRegistrationWindow,
+  getPrice,
+  isCategoryInCurrentWindow,
+} from "@/data/conference";
 import { getCategoriesFn } from "@/fns/categories";
 import { getFaqsFn } from "@/fns/faqs";
 import { createRegistrationFn } from "@/fns/registration";
-import { getEmailSuggestion, getEmailValidationError, normalizeEmail } from "@/lib/email-validation";
+import {
+  getEmailSuggestion,
+  getEmailValidationError,
+  normalizeEmail,
+} from "@/lib/email-validation";
+import { REGISTRATION_CLOSED, REGISTRATION_CLOSED_MESSAGE } from "@/lib/registration-status";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -64,7 +74,13 @@ const FIELDS: { name: keyof Fields; label: string; type?: string; placeholder?: 
   { name: "country", label: "Country" },
 ];
 
-type Category = { id: string; name: string; description: string; price: number | null; currency: string };
+type Category = {
+  id: string;
+  name: string;
+  description: string;
+  price: number | null;
+  currency: string;
+};
 
 function RegisterPage() {
   const [values, setValues] = useState<Fields>(EMPTY);
@@ -76,13 +92,55 @@ function RegisterPage() {
   const [faqs, setFaqs] = useState<{ id: string; question: string; answer: string }[]>([]);
 
   const FALLBACK_CATEGORIES: Category[] = [
-    { id: "virtual", name: "Virtual Access", description: "Attend the conference virtually.", price: 35000, currency: "NGN" },
-    { id: "member-early", name: "Members Early Bird Registration", description: "WIHCN member — early bird rate.", price: 50000, currency: "NGN" },
-    { id: "member-late", name: "Members Late Registration", description: "WIHCN member — late rate.", price: 60000, currency: "NGN" },
-    { id: "nonmember-early", name: "Non-Members Early Bird Registration", description: "Non-member — early bird rate.", price: 70000, currency: "NGN" },
-    { id: "nonmember-late", name: "Non-Members Late Registration", description: "Non-member — late rate.", price: 80000, currency: "NGN" },
-    { id: "membership-early", name: "Membership + Early Bird Registration", description: "Become a member and register — early bird rate.", price: 80000, currency: "NGN" },
-    { id: "membership-late", name: "Membership + Late Registration", description: "Become a member and register — late rate.", price: 90000, currency: "NGN" },
+    {
+      id: "virtual",
+      name: "Virtual Access",
+      description: "Attend the conference virtually.",
+      price: 35000,
+      currency: "NGN",
+    },
+    {
+      id: "member-early",
+      name: "Members Early Bird Registration",
+      description: "WIHCN member — early bird rate.",
+      price: 50000,
+      currency: "NGN",
+    },
+    {
+      id: "member-late",
+      name: "Members Late Registration",
+      description: "WIHCN member — late rate.",
+      price: 60000,
+      currency: "NGN",
+    },
+    {
+      id: "nonmember-early",
+      name: "Non-Members Early Bird Registration",
+      description: "Non-member — early bird rate.",
+      price: 70000,
+      currency: "NGN",
+    },
+    {
+      id: "nonmember-late",
+      name: "Non-Members Late Registration",
+      description: "Non-member — late rate.",
+      price: 80000,
+      currency: "NGN",
+    },
+    {
+      id: "membership-early",
+      name: "Membership + Early Bird Registration",
+      description: "Become a member and register — early bird rate.",
+      price: 80000,
+      currency: "NGN",
+    },
+    {
+      id: "membership-late",
+      name: "Membership + Late Registration",
+      description: "Become a member and register — late rate.",
+      price: 90000,
+      currency: "NGN",
+    },
   ];
 
   const EARLY_BIRD_SUB = "21 Sep – 11 Oct";
@@ -105,7 +163,9 @@ function RegisterPage() {
   }, []);
 
   useEffect(() => {
-    getFaqsFn().then(setFaqs).catch(() => {});
+    getFaqsFn()
+      .then(setFaqs)
+      .catch(() => {});
   }, []);
 
   const period = getCurrentRegistrationWindow();
@@ -150,7 +210,9 @@ function RegisterPage() {
     setStep("processing");
 
     try {
-      const result = await createRegistrationFn({ data: { ...parsed.data, email: normalizedEmail } });
+      const result = await createRegistrationFn({
+        data: { ...parsed.data, email: normalizedEmail },
+      });
 
       if (result.authorizationUrl) {
         setStep("redirect");
@@ -162,12 +224,56 @@ function RegisterPage() {
       }
     } catch (err: unknown) {
       setStep("error");
-      const msg =
-        err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
       setErrorMessage(msg);
       setLoading(false);
     }
   };
+
+  if (REGISTRATION_CLOSED) {
+    return (
+      <div className="min-h-screen bg-background font-body text-foreground">
+        <div className="pointer-events-none fixed -top-24 -right-20 size-[520px] rounded-full bg-accent/40 blur-3xl" />
+        <div className="pointer-events-none fixed bottom-0 -left-24 size-[420px] rounded-full bg-primary/20 blur-3xl" />
+
+        <nav className="sticky top-0 z-50 border-b border-border bg-primary/95 backdrop-blur-xl">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
+            <Link to="/" className="flex items-center gap-3">
+              <img src="/Logo.png" alt="WIHCN" className="h-14 w-auto" />
+            </Link>
+            <Link
+              to="/"
+              className="font-body text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80 transition-colors hover:text-white"
+            >
+              Back to site
+            </Link>
+          </div>
+        </nav>
+
+        <main className="relative mx-auto max-w-2xl px-6 py-24 text-center">
+          <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
+            Registration
+          </span>
+          <h1 className="mt-3 font-display text-[clamp(2rem,6vw,3.5rem)] leading-[0.95] font-extrabold tracking-tight">
+            REGISTRATION
+            <br />
+            IS CLOSED
+          </h1>
+          <p className="mx-auto mt-6 max-w-[48ch] font-body text-base text-pretty text-muted-foreground">
+            {REGISTRATION_CLOSED_MESSAGE}
+          </p>
+          <Link
+            to="/"
+            className="mt-10 inline-block rounded-lg bg-accent px-8 py-4 font-body text-sm font-bold uppercase tracking-[0.14em] text-accent-foreground transition-all hover:bg-accent/90"
+          >
+            Back to the conference site
+          </Link>
+        </main>
+
+        <SiteFooter />
+      </div>
+    );
+  }
 
   if (step === "processing" && !errorMessage) {
     return (
@@ -177,8 +283,12 @@ function RegisterPage() {
         <div className="relative flex min-h-screen items-center justify-center px-6">
           <div className="text-center">
             <div className="mx-auto mb-6 size-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <p className="font-body text-lg font-semibold text-foreground">Processing registration...</p>
-            <p className="mt-2 font-body text-sm text-muted-foreground">Connecting to payment gateway</p>
+            <p className="font-body text-lg font-semibold text-foreground">
+              Processing registration...
+            </p>
+            <p className="mt-2 font-body text-sm text-muted-foreground">
+              Connecting to payment gateway
+            </p>
           </div>
         </div>
       </div>
@@ -191,8 +301,12 @@ function RegisterPage() {
         <div className="relative flex min-h-screen items-center justify-center px-6">
           <div className="text-center">
             <div className="mx-auto mb-6 size-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <p className="font-body text-lg font-semibold text-foreground">Redirecting to payment...</p>
-            <p className="mt-2 font-body text-sm text-muted-foreground">Please complete your payment</p>
+            <p className="font-body text-lg font-semibold text-foreground">
+              Redirecting to payment...
+            </p>
+            <p className="mt-2 font-body text-sm text-muted-foreground">
+              Please complete your payment
+            </p>
           </div>
         </div>
       </div>
@@ -240,8 +354,12 @@ function RegisterPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">Category</th>
-                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">Fee</th>
+                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Category
+                  </th>
+                  <th className="px-4 py-3 font-body text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Fee
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -250,9 +368,13 @@ function RegisterPage() {
                   return (
                     <tr key={row.id} className="border-b border-border last:border-0">
                       <td className="px-4 py-3">
-                        <span className="font-body text-sm font-semibold text-foreground">{row.name}</span>
+                        <span className="font-body text-sm font-semibold text-foreground">
+                          {row.name}
+                        </span>
                         {row.sub && (
-                          <span className="mt-0.5 block font-body text-xs text-muted-foreground">{row.sub}</span>
+                          <span className="mt-0.5 block font-body text-xs text-muted-foreground">
+                            {row.sub}
+                          </span>
                         )}
                       </td>
                       <td className="px-4 py-3 font-body text-sm font-semibold text-foreground">
@@ -377,11 +499,15 @@ function RegisterPage() {
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between">
                   <span className="font-body text-sm text-muted-foreground">Registration Type</span>
-                  <span className="font-body text-sm font-semibold text-foreground">{selected.name}</span>
+                  <span className="font-body text-sm font-semibold text-foreground">
+                    {selected.name}
+                  </span>
                 </div>
                 <div className="border-t border-border pt-2">
                   <div className="flex justify-between">
-                    <span className="font-body text-sm font-semibold text-foreground">Conference Fee</span>
+                    <span className="font-body text-sm font-semibold text-foreground">
+                      Conference Fee
+                    </span>
                     <span className="font-display text-2xl font-extrabold tracking-tight text-foreground">
                       ₦{amount.toLocaleString()}
                     </span>
@@ -402,14 +528,21 @@ function RegisterPage() {
             disabled={loading || !selected || amount === null}
             className="mt-8 w-full rounded-lg bg-accent px-8 py-4 font-body text-sm font-bold uppercase tracking-[0.14em] text-accent-foreground transition-all hover:bg-accent/90 hover:shadow-xl hover:shadow-accent/25 disabled:opacity-50"
           >
-            {loading ? "Processing..." : amount !== null ? `Pay ₦${amount.toLocaleString()}` : "Select a registration type"}
+            {loading
+              ? "Processing..."
+              : amount !== null
+                ? `Pay ₦${amount.toLocaleString()}`
+                : "Select a registration type"}
           </button>
           <p className="mt-4 font-body text-xs text-muted-foreground">
-            Your place is confirmed only after payment has been verified. Your ticket and QR code are
-            then emailed to you.
+            Your place is confirmed only after payment has been verified. Your ticket and QR code
+            are then emailed to you.
           </p>
           <p className="mt-2 font-body text-xs">
-            <a href="#faq" className="font-semibold text-accent underline underline-offset-4 hover:opacity-80">
+            <a
+              href="#faq"
+              className="font-semibold text-accent underline underline-offset-4 hover:opacity-80"
+            >
               Read the payment FAQs
             </a>
           </p>
@@ -418,7 +551,9 @@ function RegisterPage() {
         {/* FAQ */}
         <section id="faq" className="mt-16 border-t border-border pt-12">
           <div className="border-b border-border pb-5">
-            <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">FAQ</span>
+            <span className="font-body text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
+              FAQ
+            </span>
             <h2 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
               Payment questions
             </h2>
@@ -428,16 +563,18 @@ function RegisterPage() {
           </div>
           <div className="mt-2 max-w-3xl">
             {faqs.map((f) => (
-                <details key={f.id} className="group border-b border-border py-5">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-body text-base font-semibold text-foreground">
-                    {f.question}
-                    <span className="font-mono text-lg text-accent transition-transform group-open:rotate-45">+</span>
-                  </summary>
-                  <p className="mt-3 whitespace-pre-line font-body text-sm leading-relaxed text-pretty text-muted-foreground">
-                    {f.answer}
-                  </p>
-                </details>
-              ))}
+              <details key={f.id} className="group border-b border-border py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-body text-base font-semibold text-foreground">
+                  {f.question}
+                  <span className="font-mono text-lg text-accent transition-transform group-open:rotate-45">
+                    +
+                  </span>
+                </summary>
+                <p className="mt-3 whitespace-pre-line font-body text-sm leading-relaxed text-pretty text-muted-foreground">
+                  {f.answer}
+                </p>
+              </details>
+            ))}
           </div>
         </section>
       </main>

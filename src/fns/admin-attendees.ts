@@ -5,17 +5,20 @@ import {
   settlePaidRegistration,
   completePaidRegistration,
 } from "@/server/services/payment-settlement";
+import { listPaystackTransactions } from "@/server/lib/paystack";
 import { randomBytes } from "crypto";
 
 export const getAdminAttendeesFn = createServerFn({ method: "POST" })
-  .validator((data: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    categoryId?: string;
-    paymentStatus?: string;
-    checkInStatus?: string;
-  }) => data)
+  .validator(
+    (data: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      categoryId?: string;
+      paymentStatus?: string;
+      checkInStatus?: string;
+    }) => data,
+  )
   .handler(async ({ data }) => {
     await requireAdmin();
     const page = data.page ?? 1;
@@ -72,17 +75,19 @@ export const getAdminAttendeesFn = createServerFn({ method: "POST" })
   });
 
 export const updateAdminAttendeeFn = createServerFn({ method: "POST" })
-  .validator((data: {
-    id: string;
-    firstName?: string;
-    lastName?: string;
-    phone?: string;
-    organisation?: string;
-    jobTitle?: string;
-    city?: string;
-    country?: string;
-    categoryId?: string;
-  }) => data)
+  .validator(
+    (data: {
+      id: string;
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      organisation?: string;
+      jobTitle?: string;
+      city?: string;
+      country?: string;
+      categoryId?: string;
+    }) => data,
+  )
   .handler(async ({ data }) => {
     await requireAdmin();
     const { id, ...updateData } = data;
@@ -128,6 +133,7 @@ export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
         attendeeId: true,
         email: true,
         paymentStatus: true,
+        paymentReference: true,
       },
     });
 
@@ -139,38 +145,152 @@ export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
       return { success: false, error: "Attendee is already marked as PAID" };
     }
 
-    const pendingAttendee = await prisma.attendee.findUnique({
-      where: { id: data.id },
-      select: {
-        id: true,
-        paymentReference: true,
-        ticketStatus: true,
-      },
-    });
-
-    if (!pendingAttendee?.paymentReference) {
-      return {
-        success: false,
-        error: "No payment reference — the Paystack transaction was never initialized for this registration",
-      };
+    // 1) Try our own reference first (API-initialized transactions).
+    if (attendee.paymentReference) {
+      try {
+        const result = await settlePaidRegistration({
+          reference: attendee.paymentReference,
+          email: attendee.email,
+          skipAmountCheck: true,
+        });
+        if (result.settled) {
+          return {
+            success: true,
+            message: "Payment verified and ticket issued — confirmation email queued",
+          };
+        }
+      } catch {
+        // Reference not found in Paystack — fall through to email search.
+      }
     }
 
-    const result = await settlePaidRegistration({
-      reference: pendingAttendee.paymentReference,
-    });
+    // 2) The static Paystack Payment Page generates its own reference, so
+    //    look up successful transactions by the payer's email.
+    try {
+      const list = await listPaystackTransactions({
+        email: attendee.email,
+        status: "success",
+        perPage: 50,
+      });
 
-    if (!result.settled) {
-      const message =
-        result.reason === "not_paid"
-          ? "Paystack reports this transaction has not been paid"
-          : "Could not match this registration to a Paystack transaction";
-      return { success: false, error: message };
+      for (const tx of list.data ?? []) {
+        if (!tx.reference || tx.status !== "success") continue;
+        try {
+          const result = await settlePaidRegistration({
+            reference: tx.reference,
+            email: attendee.email,
+            skipAmountCheck: true,
+          });
+          if (result.settled) {
+            return {
+              success: true,
+              message: "Payment found in Paystack and verified — ticket issued",
+            };
+          }
+        } catch {
+          // Try the next transaction.
+        }
+      }
+    } catch (err) {
+      console.error("Paystack lookup by email failed:", err);
     }
 
     return {
-      success: true,
-      message: "Payment verified and ticket issued — confirmation email queued",
+      success: false,
+      error:
+        "No successful Paystack transaction found for this attendee's email. Check the Paystack dashboard or mark the payment manually.",
     };
+  });
+
+export const syncPaystackPaymentsFn = createServerFn({ method: "POST" })
+  .validator((data: { fromDays?: number } | undefined) => ({
+    fromDays: Math.min(Math.max(data?.fromDays ?? 60, 1), 365),
+  }))
+  .handler(async ({ data }) => {
+    await requireAdmin();
+
+    const from = new Date(Date.now() - data.fromDays * 24 * 60 * 60 * 1000).toISOString();
+
+    const result = {
+      scanned: 0,
+      settled: 0,
+      alreadySettled: 0,
+      unmatched: 0,
+      failed: 0,
+      errors: [] as { reference: string; email?: string; reason: string }[],
+    };
+
+    try {
+      // Paystack pages at 100 per request; cap at 10 pages (1,000 transactions).
+      for (let page = 1; page <= 10; page++) {
+        const list = await listPaystackTransactions({
+          status: "success",
+          from,
+          page,
+          perPage: 100,
+        });
+
+        if (!list.status || !list.data || list.data.length === 0) break;
+
+        for (const tx of list.data) {
+          if (tx.status !== "success" || !tx.reference) continue;
+          result.scanned++;
+
+          const existing = await prisma.payment.findUnique({
+            where: { reference: tx.reference },
+            select: { id: true },
+          });
+          if (existing) {
+            result.alreadySettled++;
+            continue;
+          }
+
+          const email = tx.customer?.email;
+          try {
+            const settled = await settlePaidRegistration({
+              reference: tx.reference,
+              ...(email ? { email } : {}),
+              skipAmountCheck: true,
+            });
+
+            if (settled.settled) {
+              result.settled++;
+            } else if (settled.reason === "already_settled") {
+              result.alreadySettled++;
+            } else {
+              result.unmatched++;
+              if (result.errors.length < 25) {
+                result.errors.push({
+                  reference: tx.reference,
+                  email,
+                  reason: settled.reason ?? "unmatched",
+                });
+              }
+            }
+          } catch (err) {
+            result.failed++;
+            if (result.errors.length < 25) {
+              result.errors.push({
+                reference: tx.reference,
+                email,
+                reason: err instanceof Error ? err.message : "error",
+              });
+            }
+          }
+        }
+
+        const pageCount = list.meta?.pageCount ?? 1;
+        if (page >= pageCount) break;
+      }
+    } catch (err) {
+      console.error("Paystack sync failed:", err);
+      return {
+        ...result,
+        error: err instanceof Error ? err.message : "Paystack sync failed. Check the server logs.",
+      };
+    }
+
+    return result;
   });
 
 export const markAdminAttendeePaidFn = createServerFn({ method: "POST" })
@@ -200,8 +320,7 @@ export const markAdminAttendeePaidFn = createServerFn({ method: "POST" })
     }
 
     const manualReference =
-      attendee.paymentReference ??
-      `WIHCN26-MAN-${Date.now()}-${randomBytes(4).toString("hex")}`;
+      attendee.paymentReference ?? `WIHCN26-MAN-${Date.now()}-${randomBytes(4).toString("hex")}`;
 
     const result = await completePaidRegistration({
       attendee,

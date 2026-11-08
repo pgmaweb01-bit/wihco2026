@@ -8,6 +8,7 @@ import {
 } from "@/server/lib/paystack";
 import { getServerPrice, PAYSTACK_CURRENCY, toKobo } from "@/server/lib/pricing";
 import { settlePaidRegistration } from "@/server/services/payment-settlement";
+import { REGISTRATION_CLOSED, REGISTRATION_CLOSED_MESSAGE } from "@/lib/registration-status";
 
 export const initializePaymentFn = createServerFn({
   method: "POST",
@@ -20,6 +21,10 @@ export const initializePaymentFn = createServerFn({
       .parse(data),
   )
   .handler(async ({ data }) => {
+    if (REGISTRATION_CLOSED) {
+      throw new Error(REGISTRATION_CLOSED_MESSAGE);
+    }
+
     const attendee = await prisma.attendee.findUnique({
       where: { id: data.attendeeId },
       include: { category: true },

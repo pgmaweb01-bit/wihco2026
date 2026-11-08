@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { getAdminAttendeesFn, deleteAdminAttendeeFn, verifyAdminAttendeePaymentFn, markAdminAttendeePaidFn } from "@/fns/admin-attendees";
+import {
+  getAdminAttendeesFn,
+  deleteAdminAttendeeFn,
+  verifyAdminAttendeePaymentFn,
+  markAdminAttendeePaidFn,
+  syncPaystackPaymentsFn,
+} from "@/fns/admin-attendees";
 import { exportAttendeesFn } from "@/fns/admin-export";
 import { resendTicketEmailFn } from "@/fns/resend-email";
 
@@ -35,22 +41,29 @@ type Pagination = { page: number; limit: number; total: number; totalPages: numb
 
 function AdminAttendees() {
   const [attendees, setAttendees] = useState<Attendee[]>([]);
-  const [pagination, setPagination] = useState<Pagination>({ page: 1, limit: 20, total: 0, totalPages: 0 });
+  const [pagination, setPagination] = useState<Pagination>({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterPayment, setFilterPayment] = useState("");
   const [filterCheckIn, setFilterCheckIn] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
   const fetchAttendees = (page = 1, searchVal = search) => {
     setLoading(true);
 
-    const checkInParam = filterCheckIn === "CHECKED_IN"
-      ? "checked_in"
-      : filterCheckIn === "NOT_CHECKED_IN"
-        ? "not_checked_in"
-        : undefined;
+    const checkInParam =
+      filterCheckIn === "CHECKED_IN"
+        ? "checked_in"
+        : filterCheckIn === "NOT_CHECKED_IN"
+          ? "not_checked_in"
+          : undefined;
 
     getAdminAttendeesFn({
       data: {
@@ -138,7 +151,7 @@ function AdminAttendees() {
   const handleMarkPaid = async (attendeeId: string, name: string, defaultAmount: number) => {
     const amountStr = window.prompt(
       `Mark ${name} as PAID (manual payment).\n\nEnter the amount paid in Naira:`,
-      defaultAmount > 0 ? String(defaultAmount) : ""
+      defaultAmount > 0 ? String(defaultAmount) : "",
     );
 
     if (amountStr === null) return;
@@ -168,7 +181,7 @@ function AdminAttendees() {
 
   const handleDelete = async (attendeeId: string, name: string) => {
     const confirmed = window.confirm(
-      `Delete the registration for ${name}?\nThis permanently removes the attendee, payment, ticket and check-in record. This cannot be undone.`
+      `Delete the registration for ${name}?\nThis permanently removes the attendee, payment, ticket and check-in record. This cannot be undone.`,
     );
     if (!confirmed) return;
 
@@ -189,6 +202,32 @@ function AdminAttendees() {
     }
     setActionLoading(null);
     setTimeout(() => setToast(null), 5000);
+  };
+
+  const handleSyncPaystack = async () => {
+    const confirmed = window.confirm(
+      "Scan Paystack for successful payments in the last 90 days and mark matching registrations as PAID?\n\nTickets and confirmation emails are issued for each match.",
+    );
+    if (!confirmed) return;
+
+    setSyncing(true);
+    setToast(null);
+    try {
+      const res: any = await syncPaystackPaymentsFn({ data: { fromDays: 90 } });
+      if (res?.error) {
+        setToast({ message: res.error, type: "error" });
+      } else {
+        setToast({
+          message: `Paystack sync — ${res.settled} settled, ${res.alreadySettled} already paid, ${res.unmatched} unmatched, ${res.failed} failed (${res.scanned} scanned).`,
+          type: "success",
+        });
+        fetchAttendees(pagination.page, search);
+      }
+    } catch {
+      setToast({ message: "Paystack sync failed.", type: "error" });
+    }
+    setSyncing(false);
+    setTimeout(() => setToast(null), 10000);
   };
 
   const handleExport = async () => {
@@ -226,12 +265,22 @@ function AdminAttendees() {
           <h1 className="font-display text-2xl font-extrabold tracking-tight">Attendees</h1>
           <p className="mt-1 font-body text-sm text-muted-foreground">{pagination.total} total</p>
         </div>
-        <button
-          onClick={handleExport}
-          className="rounded-lg bg-primary px-4 py-2 font-body text-xs font-bold text-primary-foreground transition-all hover:bg-primary/90"
-        >
-          Export CSV
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleSyncPaystack}
+            disabled={syncing}
+            title="Match successful Paystack payments to pending registrations"
+            className="rounded-lg bg-accent px-4 py-2 font-body text-xs font-bold text-accent-foreground transition-all hover:bg-accent/90 disabled:opacity-50"
+          >
+            {syncing ? "Syncing..." : "Sync Paystack"}
+          </button>
+          <button
+            onClick={handleExport}
+            className="rounded-lg bg-primary px-4 py-2 font-body text-xs font-bold text-primary-foreground transition-all hover:bg-primary/90"
+          >
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -278,12 +327,24 @@ function AdminAttendees() {
         <table className="w-full font-body text-sm">
           <thead className="border-b border-border bg-secondary/50">
             <tr>
-              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Name</th>
-              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">ID</th>
-              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Category</th>
-              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Payment</th>
-              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Check-In</th>
-              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Actions</th>
+              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Name
+              </th>
+              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                ID
+              </th>
+              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Category
+              </th>
+              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Payment
+              </th>
+              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Check-In
+              </th>
+              <th className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -303,18 +364,24 @@ function AdminAttendees() {
               attendees.map((a) => (
                 <tr key={a.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-3">
-                    <p className="font-semibold">{a.firstName} {a.lastName}</p>
+                    <p className="font-semibold">
+                      {a.firstName} {a.lastName}
+                    </p>
                     <p className="text-xs text-muted-foreground">{a.email}</p>
                   </td>
                   <td className="px-4 py-3 font-mono text-xs">{a.attendeeId || "—"}</td>
                   <td className="px-4 py-3">{a.categoryName}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${statusBadge(a.paymentStatus)}`}>
+                    <span
+                      className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${statusBadge(a.paymentStatus)}`}
+                    >
                       {a.paymentStatus}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${statusBadge(a.checkInStatus)}`}>
+                    <span
+                      className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${statusBadge(a.checkInStatus)}`}
+                    >
                       {a.checkInStatus === "CHECKED_IN" ? "Yes" : "No"}
                     </span>
                   </td>
@@ -322,7 +389,13 @@ function AdminAttendees() {
                     <div className="flex flex-wrap items-center gap-1.5">
                       {a.paymentStatus === "PENDING" && (
                         <button
-                          onClick={() => handleMarkPaid(a.id, `${a.firstName} ${a.lastName}`, a.paymentAmount ?? 0)}
+                          onClick={() =>
+                            handleMarkPaid(
+                              a.id,
+                              `${a.firstName} ${a.lastName}`,
+                              a.paymentAmount ?? 0,
+                            )
+                          }
                           disabled={actionLoading === a.id}
                           title="Manually mark as paid (bank transfer / cash) and issue ticket + email"
                           className="rounded bg-secondary px-3 py-1.5 text-[10px] font-bold text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50"

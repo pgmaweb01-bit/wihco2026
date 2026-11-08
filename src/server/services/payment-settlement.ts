@@ -134,6 +134,13 @@ export async function completePaidRegistration(params: {
 export async function settlePaidRegistration(params: {
   reference: string;
   email?: string;
+  /**
+   * Admin reconciliation only. The static Paystack Payment Page charges its
+   * own product prices, which may differ from the tier the attendee selected
+   * in our form; the money is still genuinely captured. Public paths
+   * (verify/webhook) must leave this false so underpayments are rejected.
+   */
+  skipAmountCheck?: boolean;
 }): Promise<SettlePaidResult> {
   const existingPayment = await prisma.payment.findUnique({
     where: { reference: params.reference },
@@ -205,7 +212,7 @@ export async function settlePaidRegistration(params: {
     return { settled: false, attendeeId: attendee.id, reason: "currency_mismatch" };
   }
 
-  if (!isAmountMatch(verification.data.amount, expectedNaira)) {
+  if (!params.skipAmountCheck && !isAmountMatch(verification.data.amount, expectedNaira)) {
     console.error(
       "Settlement rejected (amount_mismatch):",
       params.reference,

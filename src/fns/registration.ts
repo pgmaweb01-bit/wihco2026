@@ -5,6 +5,7 @@ import { getServerPrice } from "@/server/lib/pricing";
 import { getPaymentPageUrl } from "@/server/lib/paystack";
 import { isEmailDomainDeliverable } from "@/server/lib/email-deliverability";
 import { getEmailValidationError, normalizeEmail } from "@/lib/email-validation";
+import { REGISTRATION_CLOSED, REGISTRATION_CLOSED_MESSAGE } from "@/lib/registration-status";
 import { randomBytes } from "crypto";
 
 function buildPaymentPageUrl(params: {
@@ -37,6 +38,10 @@ export const createRegistrationFn = createServerFn({
 })
   .validator((data: unknown) => registrationSchema.parse(data))
   .handler(async ({ data }) => {
+    if (REGISTRATION_CLOSED) {
+      throw new Error(REGISTRATION_CLOSED_MESSAGE);
+    }
+
     const email = normalizeEmail(data.email);
 
     const emailError = getEmailValidationError(email);

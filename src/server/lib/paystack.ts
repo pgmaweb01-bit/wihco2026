@@ -195,6 +195,61 @@ export async function verifyPaystackTransaction(
   return response.json();
 }
 
+export interface PaystackTransactionSummary {
+  id: number;
+  status: string;
+  reference: string;
+  amount: number;
+  currency: string;
+  paid_at: string | null;
+  customer?: { email?: string };
+  metadata?: Record<string, unknown> | string | null;
+}
+
+export interface PaystackListResponse {
+  status: boolean;
+  message: string;
+  data: PaystackTransactionSummary[];
+  meta?: { page: number; perPage: number; pageCount: number; total: number };
+}
+
+/**
+ * List transactions captured by the Paystack account. Used by admin-side
+ * reconciliation: static Payment Page checkouts never expose our reference,
+ * so success is matched by payer email instead.
+ */
+export async function listPaystackTransactions(params: {
+  email?: string;
+  status?: string;
+  from?: string;
+  to?: string;
+  page?: number;
+  perPage?: number;
+}): Promise<PaystackListResponse> {
+  const secretKey = requirePaystackSecretKey();
+
+  const query = new URLSearchParams();
+  if (params.email) query.set("customer", params.email);
+  if (params.status) query.set("status", params.status);
+  if (params.from) query.set("from", params.from);
+  if (params.to) query.set("to", params.to);
+  query.set("page", String(params.page ?? 1));
+  query.set("perPage", String(params.perPage ?? 100));
+
+  const response = await fetch(`${PAYSTACK_BASE_URL}/transaction?${query.toString()}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${secretKey}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Paystack transaction list failed: ${error}`);
+  }
+
+  return response.json();
+}
 export function validateWebhookSignature(
   body: string,
   signature: string | null | undefined,
