@@ -123,7 +123,7 @@ export const deleteAdminAttendeeFn = createServerFn({ method: "POST" })
   });
 
 export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
-  .validator((data: { id: string }) => data)
+  .validator((data: { id: string; paystackReference?: string }) => data)
   .handler(async ({ data }) => {
     await requireAdmin();
     const attendee = await prisma.attendee.findUnique({
@@ -145,12 +145,47 @@ export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
       return { success: false, error: "Attendee is already marked as PAID" };
     }
 
-    // 1) Try our own reference first (API-initialized transactions).
+    const settleErrorMessage = (reason?: string) =>
+      reason === "not_paid"
+        ? "Paystack reports this transaction has not been successfully paid"
+        : reason === "amount_mismatch"
+          ? "Amount paid on Paystack did not match the expected category fee"
+          : reason === "currency_mismatch"
+            ? "Payment currency mismatch"
+            : "Could not match this registration to a Paystack transaction. Check the reference or use 'Mark Paid'.";
+
+    // 1) Admin-supplied Paystack reference (from the Paystack receipt/dashboard).
+    const suppliedRef = data.paystackReference?.trim();
+    if (suppliedRef) {
+      try {
+        const result = await settlePaidRegistration({
+          reference: suppliedRef,
+          email: attendee.email,
+          attendeeId: attendee.id,
+          skipAmountCheck: true,
+        });
+        if (result.settled) {
+          return {
+            success: true,
+            message: "Payment verified and ticket issued — confirmation email queued",
+          };
+        }
+        return { success: false, error: settleErrorMessage(result.reason) };
+      } catch {
+        return {
+          success: false,
+          error: "Paystack could not find a transaction with that reference.",
+        };
+      }
+    }
+
+    // 2) Our own reference (API-initialized transactions).
     if (attendee.paymentReference) {
       try {
         const result = await settlePaidRegistration({
           reference: attendee.paymentReference,
           email: attendee.email,
+          attendeeId: attendee.id,
           skipAmountCheck: true,
         });
         if (result.settled) {
@@ -164,7 +199,7 @@ export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
       }
     }
 
-    // 2) The static Paystack Payment Page generates its own reference, so
+    // 3) The static Paystack Payment Page generates its own reference, so
     //    look up successful transactions by the payer's email.
     try {
       const list = await listPaystackTransactions({
@@ -179,6 +214,7 @@ export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
           const result = await settlePaidRegistration({
             reference: tx.reference,
             email: attendee.email,
+            attendeeId: attendee.id,
             skipAmountCheck: true,
           });
           if (result.settled) {
@@ -198,7 +234,7 @@ export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
     return {
       success: false,
       error:
-        "No successful Paystack transaction found for this attendee's email. Check the Paystack dashboard or mark the payment manually.",
+        "No successful Paystack transaction found for this attendee's email. Check the Paystack dashboard, enter the reference manually, or use 'Mark Paid'.",
     };
   });
 
