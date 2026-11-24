@@ -6,6 +6,7 @@ import { getPaymentPageUrl } from "@/server/lib/paystack";
 import { isEmailDomainDeliverable } from "@/server/lib/email-deliverability";
 import { getEmailValidationError, normalizeEmail } from "@/lib/email-validation";
 import { REGISTRATION_CLOSED, REGISTRATION_CLOSED_MESSAGE } from "@/lib/registration-status";
+import { PAYMENT_GATEWAY_ENABLED } from "@/lib/payment-config";
 import { randomBytes } from "crypto";
 
 function buildPaymentPageUrl(params: {
@@ -38,7 +39,9 @@ export const createRegistrationFn = createServerFn({
 })
   .validator((data: unknown) => registrationSchema.parse(data))
   .handler(async ({ data }) => {
-    if (REGISTRATION_CLOSED) {
+    // Closed registration and/or disconnected gateway: never create an
+    // attendee or hand out a payment link.
+    if (REGISTRATION_CLOSED || !PAYMENT_GATEWAY_ENABLED) {
       throw new Error(REGISTRATION_CLOSED_MESSAGE);
     }
 

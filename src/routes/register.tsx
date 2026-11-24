@@ -17,6 +17,7 @@ import {
   normalizeEmail,
 } from "@/lib/email-validation";
 import { REGISTRATION_CLOSED, REGISTRATION_CLOSED_MESSAGE } from "@/lib/registration-status";
+import { PAYMENT_GATEWAY_ENABLED } from "@/lib/payment-config";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -230,7 +231,7 @@ function RegisterPage() {
     }
   };
 
-  if (REGISTRATION_CLOSED) {
+  if (REGISTRATION_CLOSED || !PAYMENT_GATEWAY_ENABLED) {
     return (
       <div className="min-h-screen bg-background font-body text-foreground">
         <div className="pointer-events-none fixed -top-24 -right-20 size-[520px] rounded-full bg-accent/40 blur-3xl" />

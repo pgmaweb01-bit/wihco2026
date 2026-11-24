@@ -6,6 +6,7 @@ import {
   completePaidRegistration,
 } from "@/server/services/payment-settlement";
 import { listPaystackTransactions } from "@/server/lib/paystack";
+import { PAYMENT_GATEWAY_ENABLED, PAYMENT_GATEWAY_DISABLED_MESSAGE } from "@/lib/payment-config";
 import { randomBytes } from "crypto";
 
 export const getAdminAttendeesFn = createServerFn({ method: "POST" })
@@ -126,6 +127,11 @@ export const verifyAdminAttendeePaymentFn = createServerFn({ method: "POST" })
   .validator((data: { id: string; paystackReference?: string }) => data)
   .handler(async ({ data }) => {
     await requireAdmin();
+
+    if (!PAYMENT_GATEWAY_ENABLED) {
+      return { success: false, error: PAYMENT_GATEWAY_DISABLED_MESSAGE };
+    }
+
     const attendee = await prisma.attendee.findUnique({
       where: { id: data.id },
       select: {
@@ -245,8 +251,6 @@ export const syncPaystackPaymentsFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireAdmin();
 
-    const from = new Date(Date.now() - data.fromDays * 24 * 60 * 60 * 1000).toISOString();
-
     const result = {
       scanned: 0,
       settled: 0,
@@ -255,6 +259,12 @@ export const syncPaystackPaymentsFn = createServerFn({ method: "POST" })
       failed: 0,
       errors: [] as { reference: string; email?: string; reason: string }[],
     };
+
+    if (!PAYMENT_GATEWAY_ENABLED) {
+      return { ...result, error: PAYMENT_GATEWAY_DISABLED_MESSAGE };
+    }
+
+    const from = new Date(Date.now() - data.fromDays * 24 * 60 * 60 * 1000).toISOString();
 
     try {
       // Paystack pages at 100 per request; cap at 10 pages (1,000 transactions).

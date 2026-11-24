@@ -9,6 +9,7 @@ import {
 import { getServerPrice, PAYSTACK_CURRENCY, toKobo } from "@/server/lib/pricing";
 import { settlePaidRegistration } from "@/server/services/payment-settlement";
 import { REGISTRATION_CLOSED, REGISTRATION_CLOSED_MESSAGE } from "@/lib/registration-status";
+import { PAYMENT_GATEWAY_ENABLED, PAYMENT_GATEWAY_DISABLED_MESSAGE } from "@/lib/payment-config";
 
 export const initializePaymentFn = createServerFn({
   method: "POST",
@@ -21,8 +22,10 @@ export const initializePaymentFn = createServerFn({
       .parse(data),
   )
   .handler(async ({ data }) => {
-    if (REGISTRATION_CLOSED) {
-      throw new Error(REGISTRATION_CLOSED_MESSAGE);
+    if (REGISTRATION_CLOSED || !PAYMENT_GATEWAY_ENABLED) {
+      throw new Error(
+        REGISTRATION_CLOSED ? REGISTRATION_CLOSED_MESSAGE : PAYMENT_GATEWAY_DISABLED_MESSAGE,
+      );
     }
 
     const attendee = await prisma.attendee.findUnique({
@@ -75,76 +78,49 @@ export const verifyPaymentFn = createServerFn({
       .parse(data),
   )
   .handler(async ({ data }) => {
-    const helper = async () => {
-      const payment = await prisma.payment.findUnique({
-        where: { reference: data.reference },
-      });
+    // Gateway disconnected: read our own records only — nothing is requeried
+    // from Paystack, so this stays safe to poll from /payment-success.
+    const payment = await prisma.payment.findUnique({
+      where: { reference: data.reference },
+    });
 
-      if (!payment) {
-        const attendee = await prisma.attendee.findUnique({
-          where: { paymentReference: data.reference },
-          select: { id: true, paymentStatus: true, ticketStatus: true },
-        });
-
-        if (attendee) {
-          return {
-            status: attendee.paymentStatus,
-            attendeeId: attendee.id,
-            paymentStatus: attendee.paymentStatus,
-            ticketStatus: attendee.ticketStatus,
-            hasTicket: attendee.ticketStatus === "ISSUED",
-          };
-        }
-
-        return {
-          status: "not_found",
-          reference: data.reference,
-          paymentStatus: "PENDING",
-          ticketStatus: "PENDING",
-          hasTicket: false,
-        };
-      }
-
+    if (!payment) {
       const attendee = await prisma.attendee.findUnique({
-        where: { id: payment.attendeeId },
+        where: { paymentReference: data.reference },
         select: { id: true, paymentStatus: true, ticketStatus: true },
       });
 
-      return {
-        status: payment.status,
-        attendeeId: attendee?.id,
-        paymentStatus: attendee?.paymentStatus ?? "PENDING",
-        ticketStatus: attendee?.ticketStatus ?? "PENDING",
-        hasTicket: attendee?.ticketStatus === "ISSUED",
-      };
-    };
-
-    const initial = await helper();
-
-    if (initial.paymentStatus !== "PAID") {
-      try {
-        const verification = await verifyPaystackTransaction(data.reference);
-
-        if (verification.status === true && verification.data.status === "success") {
-          const email = verification.data.customer?.email;
-          const result = await settlePaidRegistration({
-            reference: data.reference,
-            ...(email ? { email } : {}),
-          });
-
-          if (!result.settled && result.reason && result.reason !== "already_settled") {
-            console.error("Payment verify: settlement refused", data.reference, result.reason);
-          }
-
-          const after = await helper();
-          return after.paymentStatus !== "PENDING" ? after : initial;
-        }
-      } catch (err) {
-        console.error("Verify payment requery failed:", err);
+      if (attendee) {
+        return {
+          status: attendee.paymentStatus,
+          attendeeId: attendee.id,
+          paymentStatus: attendee.paymentStatus,
+          ticketStatus: attendee.ticketStatus,
+          hasTicket: attendee.ticketStatus === "ISSUED",
+        };
       }
+
+      return {
+        status: "not_found",
+        reference: data.reference,
+        paymentStatus: "PENDING",
+        ticketStatus: "PENDING",
+        hasTicket: false,
+      };
     }
 
-    return initial;
+    const attendee = await prisma.attendee.findUnique({
+      where: { id: payment.attendeeId },
+      select: { id: true, paymentStatus: true, ticketStatus: true },
+    });
+
+    return {
+      status: payment.status,
+      attendeeId: attendee?.id ?? payment.attendeeId,
+      paymentStatus: attendee?.paymentStatus ?? "PENDING",
+      ticketStatus: attendee?.ticketStatus ?? "PENDING",
+      hasTicket: attendee?.ticketStatus === "ISSUED",
+    };
   });
 
 export const processWebhookFn = createServerFn({
@@ -159,6 +135,10 @@ export const processWebhookFn = createServerFn({
       .parse(data),
   )
   .handler(async ({ data }) => {
+    if (!PAYMENT_GATEWAY_ENABLED) {
+      throw new Error(PAYMENT_GATEWAY_DISABLED_MESSAGE);
+    }
+
     const isValid = validateWebhookSignature(data.body, data.signature);
 
     if (!isValid) {

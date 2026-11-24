@@ -55,6 +55,16 @@ function PaymentSuccessPage() {
           setMessage("Payment was not successful. Please try again.");
           return;
         }
+
+        // Gateway disconnected: no record means no captured payment. Stop
+        // polling instead of spinning for 30 seconds.
+        if (data.status === "not_found") {
+          setStatus("pending");
+          setMessage(
+            "We could not find a payment with that reference. Online payments are closed — contact admin@wihcn.com with your receipt if you believe you have paid.",
+          );
+          return;
+        }
       } catch {
         // continue polling on transient errors
       }
@@ -65,9 +75,7 @@ function PaymentSuccessPage() {
         timeoutId = setTimeout(poll, 3000);
       } else {
         setStatus("pending");
-        setMessage(
-          "Your payment is being verified. You will receive an email shortly.",
-        );
+        setMessage("Your payment is being verified. You will receive an email shortly.");
       }
     };
 
@@ -99,13 +107,10 @@ function PaymentSuccessPage() {
             <h1 className="font-display text-2xl font-extrabold text-foreground">
               Payment Confirmed!
             </h1>
-            <p className="mt-3 font-body text-sm text-muted-foreground">
-              {message}
-            </p>
+            <p className="mt-3 font-body text-sm text-muted-foreground">{message}</p>
             {attendeeId && (
               <p className="mt-2 font-body text-xs text-muted-foreground">
-                Your attendee ID is{" "}
-                <span className="font-semibold text-accent">{attendeeId}</span>.
+                Your attendee ID is <span className="font-semibold text-accent">{attendeeId}</span>.
               </p>
             )}
             <p className="mt-2 font-body text-xs text-muted-foreground">
@@ -136,9 +141,7 @@ function PaymentSuccessPage() {
             <h1 className="font-display text-2xl font-extrabold text-foreground">
               Payment Pending
             </h1>
-            <p className="mt-3 font-body text-sm text-muted-foreground">
-              {message}
-            </p>
+            <p className="mt-3 font-body text-sm text-muted-foreground">{message}</p>
             <Link
               to="/"
               className="mt-8 inline-block rounded-lg bg-primary px-6 py-3 font-body text-sm font-bold text-primary-foreground transition-all hover:bg-primary/90"
@@ -153,12 +156,8 @@ function PaymentSuccessPage() {
             <div className="mx-auto mb-6 grid size-16 place-items-center rounded-full bg-destructive/10">
               <span className="text-3xl text-destructive">&#10005;</span>
             </div>
-            <h1 className="font-display text-2xl font-extrabold text-foreground">
-              Payment Issue
-            </h1>
-            <p className="mt-3 font-body text-sm text-muted-foreground">
-              {message}
-            </p>
+            <h1 className="font-display text-2xl font-extrabold text-foreground">Payment Issue</h1>
+            <p className="mt-3 font-body text-sm text-muted-foreground">{message}</p>
             <Link
               to="/register"
               className="mt-8 inline-block rounded-lg bg-primary px-6 py-3 font-body text-sm font-bold text-primary-foreground transition-all hover:bg-primary/90"

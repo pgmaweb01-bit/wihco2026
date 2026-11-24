@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { processWebhookFn } from "@/fns/payment";
+import { PAYMENT_GATEWAY_ENABLED } from "@/lib/payment-config";
 
 const MAX_WEBHOOK_BODY_BYTES = 1_000_000;
 
@@ -8,6 +9,16 @@ export const Route = createFileRoute("/api/payments/webhook")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          // Gateway disconnected: Ack as gone without reading or processing the
+          // payload. Paystack retries non-2xx for a while, then gives up; we
+          // never touch the transaction and never write to the database.
+          if (!PAYMENT_GATEWAY_ENABLED) {
+            return new Response(JSON.stringify({ error: "Payment gateway disconnected" }), {
+              status: 410,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
           const body = await request.text();
           const signature = request.headers.get("x-paystack-signature") || "";
 

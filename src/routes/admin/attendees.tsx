@@ -9,6 +9,7 @@ import {
 } from "@/fns/admin-attendees";
 import { exportAttendeesFn } from "@/fns/admin-export";
 import { resendTicketEmailFn } from "@/fns/resend-email";
+import { PAYMENT_GATEWAY_ENABLED } from "@/lib/payment-config";
 
 export const Route = createFileRoute("/admin/attendees")({
   component: AdminAttendees,
@@ -278,17 +279,23 @@ function AdminAttendees() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-extrabold tracking-tight">Attendees</h1>
-          <p className="mt-1 font-body text-sm text-muted-foreground">{pagination.total} total</p>
+          <p className="mt-1 font-body text-sm text-muted-foreground">
+            {pagination.total} total
+            {!PAYMENT_GATEWAY_ENABLED &&
+              " · Payment gateway disconnected — use Mark Paid for payments received offline"}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={handleSyncPaystack}
-            disabled={syncing}
-            title="Match successful Paystack payments to pending registrations"
-            className="rounded-lg bg-accent px-4 py-2 font-body text-xs font-bold text-accent-foreground transition-all hover:bg-accent/90 disabled:opacity-50"
-          >
-            {syncing ? "Syncing..." : "Sync Paystack"}
-          </button>
+          {PAYMENT_GATEWAY_ENABLED && (
+            <button
+              onClick={handleSyncPaystack}
+              disabled={syncing}
+              title="Match successful Paystack payments to pending registrations"
+              className="rounded-lg bg-accent px-4 py-2 font-body text-xs font-bold text-accent-foreground transition-all hover:bg-accent/90 disabled:opacity-50"
+            >
+              {syncing ? "Syncing..." : "Sync Paystack"}
+            </button>
+          )}
           <button
             onClick={handleExport}
             className="rounded-lg bg-primary px-4 py-2 font-body text-xs font-bold text-primary-foreground transition-all hover:bg-primary/90"
@@ -425,7 +432,7 @@ function AdminAttendees() {
                           )}
                         </button>
                       )}
-                      {a.paymentStatus === "PENDING" && (
+                      {a.paymentStatus === "PENDING" && PAYMENT_GATEWAY_ENABLED && (
                         <button
                           onClick={() => handleVerify(a.id, `${a.firstName} ${a.lastName}`)}
                           disabled={actionLoading === a.id}

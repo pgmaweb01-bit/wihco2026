@@ -1,4 +1,5 @@
 import { createHmac } from "node:crypto";
+import { PAYMENT_GATEWAY_ENABLED, PAYMENT_GATEWAY_DISABLED_MESSAGE } from "@/lib/payment-config";
 
 const PAYSTACK_BASE_URL = "https://api.paystack.co";
 
@@ -68,6 +69,17 @@ function requirePaystackSecretKey(): string {
     throw new Error("PAYSTACK_SECRET_KEY is not configured — refusing to call Paystack");
   }
   return key;
+}
+
+/**
+ * Gateway kill switch. Every outbound Paystack call funnels through this, so
+ * disconnecting the gateway cannot be bypassed by a stray code path or a
+ * caller that forgets to check the flag.
+ */
+function assertPaymentGatewayEnabled(): void {
+  if (!PAYMENT_GATEWAY_ENABLED) {
+    throw new Error(PAYMENT_GATEWAY_DISABLED_MESSAGE);
+  }
 }
 
 /** Base URL of the deployed app, or null when APP_URL is unset/invalid. */
@@ -140,6 +152,7 @@ export async function initializePaystackTransaction(params: {
   currency?: string;
   metadata?: Record<string, unknown>;
 }): Promise<PaystackInitResponse> {
+  assertPaymentGatewayEnabled();
   const secretKey = requirePaystackSecretKey();
 
   const body: Record<string, unknown> = {
@@ -175,6 +188,7 @@ export async function initializePaystackTransaction(params: {
 export async function verifyPaystackTransaction(
   reference: string,
 ): Promise<PaystackVerifyResponse> {
+  assertPaymentGatewayEnabled();
   const secretKey = requirePaystackSecretKey();
 
   const response = await fetch(
@@ -226,6 +240,7 @@ export async function listPaystackTransactions(params: {
   page?: number;
   perPage?: number;
 }): Promise<PaystackListResponse> {
+  assertPaymentGatewayEnabled();
   const secretKey = requirePaystackSecretKey();
 
   const query = new URLSearchParams();
@@ -250,6 +265,7 @@ export async function listPaystackTransactions(params: {
 
   return response.json();
 }
+
 export function validateWebhookSignature(
   body: string,
   signature: string | null | undefined,
